@@ -64,7 +64,7 @@ function OwnerLogin() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+         "https://mahaveer-pawn-broker-c32n.vercel.app/api/auth/login",
         {
           method: "POST",
 
