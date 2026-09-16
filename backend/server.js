@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-dotenv.config();
+dotenv.config({ path: "backend/.env" });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -1488,31 +1488,17 @@ app.get(
     }
   }
 );
-
 /* =========================================================
-   START SERVER
+   SERVER STARTUP / VERCEL
 ========================================================= */
 
-app.listen(
-  PORT,
-  () => {
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
     console.log("");
-
-    console.log(
-      "===================================="
-    );
-
-    console.log(
-      "Mahaveer Gold backend is running"
-    );
-
-    console.log(
-      `http://localhost:${PORT}`
-    );
-
-    console.log(
-      "===================================="
-    );
+    console.log("====================================");
+    console.log("Mahaveer Gold backend is running");
+    console.log(`http://localhost:${PORT}`);
+    console.log("====================================");
 
     console.log(
       "OWNER ACCOUNTS:",
@@ -1549,10 +1535,9 @@ app.listen(
       "LOGIN MODE: OWNER MOBILE + PIN"
     );
 
-    console.log(
-      "===================================="
-    );
-
+    console.log("====================================");
     console.log("");
-  }
-);
+  });
+}
+
+export default app;
