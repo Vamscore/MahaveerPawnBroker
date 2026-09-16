@@ -70,3 +70,5 @@ oauth-client.json
 **/node_modules/
 # Old backend backup
 server-old/
+# Local backend backup
+backend/server-backup.js
