@@ -4,7 +4,11 @@ import dotenv from "dotenv";
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-dotenv.config({ path: "backend/.env" });
+if (!process.env.VERCEL) {
+  dotenv.config({ path: "backend/.env" });
+} else {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
