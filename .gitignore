@@ -53,3 +53,20 @@ backend/oauth-client.json
 # Application data
 backend/data/pawn-tickets.json
 server/data/pawn-tickets.json
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Google credentials
+oauth-client.json
+**/oauth-client.json
+
+# Service account credentials
+**/Credentials/
+**/*credentials*.json
+
+# Local data
+**/node_modules/
+# Old backend backup
+server-old/
