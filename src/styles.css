@@ -1,0 +1,2725 @@
+/* =========================================================
+   MAHAVEER GOLD FINANCE
+   FINAL STYLES
+========================================================= */
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+
+  color: #172030;
+  background: #fff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  --navy: #001a35;
+  --navy-dark: #031528;
+  --gold: #e7ad36;
+  --gold-light: #f2c75b;
+
+  --border: #b5b5b5;
+  --border-dark: #777;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  width: 100%;
+  background: #fff;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* =========================================================
+   MAIN WEBSITE
+========================================================= */
+
+.site-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.top-bar {
+  width: 100%;
+  height: 60px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  background: #fff;
+  color: #172030;
+
+  font-family: "Times New Roman", Times, serif;
+  font-size: 48px;
+
+  position: relative;
+  z-index: 30;
+
+  overflow: hidden;
+}
+
+.top-bar > div {
+  white-space: nowrap;
+}
+
+.top-bar span {
+  color: #c99a31;
+  font-weight: 700;
+}
+
+/* =========================================================
+   MAIN HEADER
+========================================================= */
+
+.main-header {
+  width: 100%;
+  height: 100px;
+
+  padding: 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #fff;
+
+  position: relative;
+  z-index: 20;
+}
+
+/* =========================================================
+   HEADER LOGO
+========================================================= */
+
+.logo-space {
+  width: auto;
+  height: 110px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 25px;
+
+  flex-shrink: 0;
+
+  overflow: visible;
+}
+
+.logo-space > img {
+  width: 100px;
+  height: 95px;
+
+  max-width: none;
+  max-height: none;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+/* =========================================================
+   HEADER GOD IMAGES
+========================================================= */
+
+.header-god-images {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  height: 100px;
+}
+
+.header-god-images img {
+  width: 80px;
+  height: 100px;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+/* =========================================================
+   HEADER CONTACT
+========================================================= */
+
+.header-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.phone-icon {
+  width: 36px;
+  height: 36px;
+
+  border: 1px solid #bca05e;
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  color: #876b2a;
+
+  flex-shrink: 0;
+}
+
+.header-contact span {
+  display: block;
+
+  font-size: 11px;
+  color: #555;
+}
+
+.header-contact strong {
+  display: block;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  color: #172030;
+
+  letter-spacing: 0.5px;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+  width: 100%;
+  height: 390px;
+  min-height: 390px;
+
+  position: relative;
+
+  display: block;
+
+  overflow: hidden;
+
+  background: #061a30;
+}
+
+/* =========================================================
+   HERO IMAGE
+========================================================= */
+
+.hero-image-wrap {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      90deg,
+      #061a30 0%,
+      #102b45 38%,
+      #29170f 65%,
+      #090505 100%
+    );
+}
+
+.hero-image-wrap img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+/* =========================================================
+   GENERAL IMAGE FIX
+========================================================= */
+
+img {
+  max-width: 100%;
+}
+
+/* =========================================================
+   CALCULATOR IMAGE AREA
+========================================================= */
+
+.calculator-image,
+.loan-calculator-image,
+.calculator-right,
+.loan-image,
+.image-section {
+  overflow: hidden;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================================================
+   CALCULATOR RIGHT IMAGE
+========================================================= */
+
+.calculator-image img,
+.loan-calculator-image img,
+.calculator-right img,
+.loan-image img,
+.image-section img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  max-width: none;
+
+  object-fit: contain !important;
+  object-position: center center !important;
+
+  background: #fff;
+}
+
+/* =========================================================
+   PROMO IMAGE
+========================================================= */
+
+.side-promo {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 285px;
+
+  overflow: hidden;
+
+  background: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-promo img {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  max-width: none;
+
+  display: block;
+
+  object-fit: contain !important;
+  object-position: center center !important;
+
+  margin: 0;
+  padding: 0;
+
+  background: #fff;
+
+  z-index: 1;
+}
+
+/* =========================================================
+   PROMO IMAGE - DESKTOP
+========================================================= */
+
+.calculator-grid .side-promo {
+  min-width: 0;
+  min-height: 285px;
+
+  overflow: hidden;
+
+  background: #fff;
+}
+
+.calculator-grid .side-promo > img {
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+  object-position: center center !important;
+
+  max-width: 100% !important;
+  max-height: 100% !important;
+
+  display: block !important;
+}
+
+/* =========================================================
+   HERO PLACEHOLDER
+========================================================= */
+
+.image-placeholder {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  color: #f0c458;
+
+  background:
+    radial-gradient(
+      circle at 65% 45%,
+      #5d371e 0,
+      #29150e 40%,
+      #100706 80%
+    );
+}
+
+.image-placeholder strong {
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+
+.image-placeholder span {
+  margin-top: 8px;
+
+  font-size: 12px;
+
+  color: #eee;
+}
+
+.hero-placeholder {
+  z-index: 0;
+}
+
+.hero-image-wrap
+img:not([style*="display: none"])
++ .hero-placeholder {
+  display: none;
+}
+
+/* =========================================================
+   HERO OVERLAY
+========================================================= */
+
+.hero-image-wrap::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(3, 18, 35, 0.96) 0%,
+      rgba(4, 23, 42, 0.90) 25%,
+      rgba(4, 23, 42, 0.60) 40%,
+      rgba(4, 23, 42, 0.30) 52%,
+      rgba(0, 0, 0, 0.12) 75%,
+      rgba(0, 0, 0, 0.28) 100%
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HERO CONTENT
+========================================================= */
+
+.hero-copy {
+  position: relative;
+
+  z-index: 2;
+
+  width: 55%;
+
+  height: 390px;
+  min-height: 390px;
+
+  padding: 52px 5.5% 35px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  color: #fff;
+
+  background: transparent;
+}
+
+/* =========================================================
+   HERO TITLE
+========================================================= */
+
+.hero h1 {
+  margin: 0;
+
+  max-width: 560px;
+
+  font-size: clamp(40px, 4.3vw, 62px);
+
+  line-height: 0.95;
+
+  letter-spacing: 0.5px;
+
+  font-weight: 800;
+
+  color: #fff;
+}
+
+.hero h1 span {
+  display: block;
+
+  color: var(--gold);
+}
+
+/* =========================================================
+   GOLD LINE
+========================================================= */
+
+.gold-line,
+.small-gold-line {
+  width: 32px;
+  height: 2px;
+
+  background: var(--gold);
+
+  flex-shrink: 0;
+}
+
+.gold-line {
+  margin-top: 22px;
+}
+
+/* =========================================================
+   HERO FEATURES
+========================================================= */
+
+.hero-features {
+  margin-top: 24px;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 16px 45px;
+
+  width: 100%;
+
+  max-width: 500px;
+}
+
+.feature {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  font-size: 13px;
+
+  color: #fff;
+
+  white-space: nowrap;
+}
+
+.feature-icon {
+  width: 20px;
+
+  flex: 0 0 20px;
+
+  text-align: center;
+
+  color: var(--gold-light);
+}
+
+/* =========================================================
+   VALUE BADGE
+========================================================= */
+
+.value-badge {
+  position: absolute;
+
+  z-index: 5;
+
+  top: 24px;
+  right: 5%;
+
+  width: 105px;
+  height: 105px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  color: #fff;
+
+  border: 2px solid var(--gold);
+
+  border-radius: 50%;
+
+  background: rgba(4, 23, 42, 0.92);
+
+  box-shadow:
+    0 0 0 3px rgba(231, 173, 54, 0.25);
+}
+
+.value-badge div {
+  color: var(--gold);
+
+  font-size: 9px;
+
+  letter-spacing: 1.5px;
+}
+
+.value-badge strong {
+  font-size: 12px;
+
+  margin-top: 4px;
+}
+
+.value-badge span {
+  font-size: 11px;
+
+  margin-top: 2px;
+}
+
+/* =========================================================
+   CALCULATOR SECTION
+========================================================= */
+
+.calculator-section {
+  width: 89%;
+  max-width: 1600px;
+
+  padding: 0;
+
+  margin: 38px auto 0;
+
+  background: #fff;
+
+  position: relative;
+
+  z-index: 10;
+}
+
+/* =========================================================
+   CALCULATOR GRID
+========================================================= */
+
+.calculator-grid {
+  width: 100%;
+
+  min-height: 285px;
+
+  display: grid;
+
+  grid-template-columns:
+    43%
+    32%
+    25%;
+
+  box-shadow:
+    0 7px 25px rgba(0, 0, 0, 0.14);
+
+  position: relative;
+
+  z-index: 2;
+
+  overflow: hidden;
+
+  border-radius: 8px;
+
+  align-items: stretch;
+}
+
+/* =========================================================
+   CALCULATOR LEFT
+========================================================= */
+
+.calculator-panel {
+  width: 100%;
+
+  min-width: 0;
+
+  padding: 23px 27px;
+
+  background: var(--navy);
+
+  color: #fff;
+}
+
+.calculator-panel h2 {
+  margin: 0;
+
+  font-size: 16px;
+
+  letter-spacing: 0.2px;
+}
+
+.calculator-panel h2 span {
+  color: var(--gold);
+}
+
+.small-gold-line {
+  margin: 12px 0 21px;
+}
+
+.calculator-panel label {
+  display: block;
+
+  font-size: 12px;
+
+  margin-bottom: 7px;
+
+  color: #eee;
+}
+
+.calculator-panel input,
+.calculator-panel select {
+  width: 100%;
+
+  height: 43px;
+
+  padding: 0 12px;
+
+  color: #fff;
+
+  border: 1px solid #63768a;
+
+  border-radius: 3px;
+
+  background: #071e36;
+
+  outline: none;
+}
+
+.calculator-panel input:focus,
+.calculator-panel select:focus,
+.loan-details-panel input:focus {
+  border-color: var(--gold);
+}
+
+.input-with-suffix {
+  width: 100%;
+
+  display: flex;
+
+  gap: 10px;
+
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.input-with-suffix input {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.input-with-suffix span {
+  font-size: 12px;
+
+  min-width: 43px;
+}
+
+.calculator-panel select {
+  appearance: auto;
+}
+
+.saved-note {
+  color: #aebdca;
+
+  font-size: 11px;
+
+  margin: 17px 0 0;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   LOAN DETAILS
+========================================================= */
+
+.loan-details-panel {
+  width: 100%;
+
+  min-width: 0;
+
+  padding: 21px 31px;
+
+  background: #fff;
+}
+
+.detail-block label {
+  display: block;
+
+  font-size: 11px;
+
+  color: #34383e;
+
+  font-weight: 700;
+
+  letter-spacing: 0.3px;
+
+  margin-bottom: 8px;
+}
+
+.money-input,
+.rate-input {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color: var(--gold);
+}
+
+.money-input span {
+  font-size: 21px;
+
+  font-weight: 700;
+}
+
+.money-input input,
+.rate-input input {
+  width: 100%;
+
+  min-width: 0;
+
+  border: 0;
+
+  outline: 0;
+
+  font-size: 25px;
+
+  font-weight: 700;
+
+  color: #b58a28;
+
+  padding: 0;
+
+  background: transparent;
+}
+
+.money-input input::placeholder,
+.rate-input input::placeholder {
+  color: #c3a766;
+
+  opacity: 0.75;
+}
+
+.detail-divider {
+  height: 1px;
+
+  background: #d6d6d6;
+
+  margin: 19px 0 18px;
+}
+
+.rate-input input {
+  font-size: 21px;
+}
+
+.rate-input span {
+  font-size: 15px;
+
+  color: #9b7b2f;
+}
+
+.detail-block small {
+  margin-left: 2px;
+
+  color: #777;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   SAVE BUTTON
+========================================================= */
+
+.save-button {
+  width: 100%;
+
+  margin-top: 20px;
+
+  border: 0;
+
+  padding: 12px 10px;
+
+  border-radius: 3px;
+
+  background: #e0ac38;
+
+  color: #fff;
+
+  font-weight: 700;
+
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.save-button:hover {
+  background: #c99424;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   PROMO
+========================================================= */
+
+.promo-placeholder {
+  z-index: 0;
+}
+
+.side-promo
+img:not([style*="display: none"])
++ .promo-placeholder {
+  display: none;
+}
+
+.promo-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 20px;
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.60),
+      rgba(0, 0, 0, 0.18)
+    );
+
+  text-align: center;
+}
+
+.promo-overlay span {
+  font-size: 14px;
+}
+
+.promo-overlay strong {
+  font-size: 17px;
+
+  margin: 3px 0;
+}
+
+.promo-overlay b {
+  color: var(--gold);
+
+  font-size: 17px;
+
+  margin-top: 2px;
+}
+
+/* =========================================================
+   SECURITY BANNER
+========================================================= */
+
+.secure-banner {
+  width: 89%;
+
+  margin: 80px auto 0;
+
+  min-height: 91px;
+
+  background:
+    linear-gradient(
+      100deg,
+      #06223e,
+      #02192d
+    );
+
+  color: #fff;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 15px 28px;
+
+  border-radius: 4px;
+
+  overflow: hidden;
+}
+
+.shield {
+  width: 45px;
+  height: 45px;
+
+  border: 2px solid var(--gold);
+
+  color: var(--gold);
+
+  display: grid;
+
+  place-items: center;
+
+  clip-path:
+    polygon(
+      50% 0,
+      88% 14%,
+      88% 62%,
+      50% 100%,
+      12% 62%,
+      12% 14%
+    );
+
+  font-size: 22px;
+
+  flex: 0 0 auto;
+}
+
+.secure-copy {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.secure-copy h2 {
+  margin: 0 0 4px;
+
+  font-size: 21px;
+
+  letter-spacing: 0.4px;
+}
+
+.secure-copy p {
+  margin: 0;
+
+  font-size: 12px;
+
+  color: #e0e5ea;
+}
+
+.secondary-button {
+  display: inline-flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: #e1ad3a;
+
+  color: #fff;
+
+  font-weight: 700;
+
+  font-size: 11px;
+
+  padding: 12px 32px;
+
+  border-radius: 3px;
+
+  white-space: nowrap;
+}
+
+.vault-art {
+  width: 120px;
+
+  font-size: 66px;
+
+  text-align: center;
+
+  color: #758ba0;
+
+  opacity: 0.65;
+
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   PAWN TICKET
+========================================================= */
+
+.pawn-ticket-section {
+  width: 100%;
+
+  padding: 70px 5.4%;
+
+  background: #f5f5f5;
+}
+
+.pawn-ticket-container {
+  width: min(900px, 100%);
+
+  margin: 0 auto;
+
+  padding: 35px;
+
+  background: #fff;
+
+  border: 1px solid #aaa;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.12);
+
+  position: relative;
+}
+
+/* =========================================================
+   PAWN TICKET HEADER
+========================================================= */
+
+.pawn-ticket-heading {
+  text-align: center;
+
+  justify-content: space-evenly;
+
+  display: flex;
+
+  border-bottom: 2px solid #172030;
+
+  padding-bottom: 15px;
+
+  margin-bottom: 20px;
+
+  position: relative;
+}
+
+.pawn-ticket-heading span {
+  display: block;
+
+  font-size: 13px;
+
+  color: #555;
+
+  letter-spacing: 1px;
+}
+
+.pawn-ticket-heading h2 {
+  margin: 5px 0 0;
+
+  font-size: 34px;
+
+  color: var(--navy);
+
+  letter-spacing: 2px;
+}
+
+.pawn-ticket-heading p {
+  margin: 3px 0 0;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+/* =========================================================
+   PAWN TICKET TOP
+========================================================= */
+
+.ticket-top-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 20px;
+
+  margin-bottom: 18px;
+}
+
+.ticket-left-image {
+  width: 120px;
+  height: 120px;
+
+  object-fit: contain;
+}
+
+.ticket-god-image {
+  width: 120px;
+  height: 120px;
+
+  object-fit: contain;
+}
+
+/* =========================================================
+   TICKET FIELDS
+========================================================= */
+
+.ticket-fields {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 17px;
+
+  row-gap: 20px;
+}
+
+.ticket-field {
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+
+  padding: 0;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.ticket-field label {
+  margin-bottom: 6px;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  color: #333;
+}
+
+.ticket-field input,
+.ticket-field select,
+.ticket-field textarea {
+  width: 100%;
+
+  padding: 10px 11px;
+
+  border: 1px solid #999;
+
+  border-radius: 3px;
+
+  background: #fff;
+
+  color: #172030;
+
+  outline: none;
+}
+
+.ticket-field input,
+.ticket-field select {
+  height: 40px;
+}
+
+.ticket-field textarea {
+  resize: vertical;
+
+  min-height: 70px;
+}
+
+.ticket-field input:focus,
+.ticket-field select:focus,
+.ticket-field textarea:focus {
+  border-color: var(--gold);
+
+  box-shadow:
+    0 0 0 2px rgba(231, 173, 54, 0.12);
+}
+
+/* =========================================================
+   RUPEE INPUT
+========================================================= */
+
+.ticket-input-prefix {
+  display: flex;
+
+  align-items: center;
+
+  border: 1px solid #999;
+
+  border-radius: 3px;
+
+  overflow: hidden;
+
+  background: #fff;
+}
+
+.ticket-input-prefix span {
+  padding: 0 11px;
+
+  font-weight: 700;
+
+  color: #96721f;
+}
+
+.ticket-input-prefix input {
+  border: 0 !important;
+
+  box-shadow: none !important;
+
+  border-radius: 0 !important;
+}
+
+/* =========================================================
+   BOTTOM TICKET AREA
+========================================================= */
+
+.ticket-bottom-grid {
+  display: grid;
+
+  grid-template-columns: 30% 70%;
+
+  gap: 25px;
+
+  margin-top: 25px;
+
+  align-items: start;
+}
+
+.income-box {
+  border: 1px solid #999;
+
+  padding: 18px;
+
+  align-self: start;
+
+  background: #fff;
+}
+
+.income-box h3,
+.weight-section h3 {
+  margin: 0 0 15px;
+
+  font-size: 14px;
+
+  color: var(--navy);
+}
+
+.weight-section {
+  width: 100%;
+
+  min-width: 0;
+}
+
+/* =========================================================
+   GOLD WEIGHT TABLE
+========================================================= */
+
+.weight-table {
+  width: 100%;
+
+  border: 2px solid #777;
+
+  border-collapse: collapse;
+
+  background: #fff;
+
+  overflow: hidden;
+}
+
+.weight-header,
+.weight-row {
+  display: grid;
+
+  grid-template-columns:
+    1.4fr
+    1fr
+    1fr
+    1fr
+    1fr;
+
+  width: 100%;
+}
+
+.weight-header span,
+.weight-row > * {
+  min-height: 38px;
+
+  border-right: 1px solid #777;
+
+  border-bottom: 1px solid #777;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #fff;
+}
+
+.weight-header span:last-child,
+.weight-row > *:last-child {
+  border-right: 0;
+}
+
+.weight-row:last-child > * {
+  border-bottom: 0;
+}
+
+.weight-header {
+  background: #eeeeee;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.weight-header span {
+  background: #eeeeee;
+
+  font-weight: 700;
+}
+
+.weight-row strong {
+  justify-content: flex-start;
+
+  padding-left: 10px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.weight-row input {
+  width: 100%;
+
+  height: 100%;
+
+  min-height: 38px;
+
+  border: 0;
+
+  outline: none;
+
+  text-align: center;
+
+  background: #fff;
+
+  color: #172030;
+}
+
+.weight-row input:focus {
+  background: #fffaf0;
+
+  box-shadow:
+    inset 0 0 0 2px rgba(231, 173, 54, 0.45);
+}
+
+/* =========================================================
+   DECLARATION
+========================================================= */
+
+.ticket-declaration {
+  margin-top: 25px;
+
+  padding: 15px;
+
+  border-top: 2px solid #888;
+
+  border-bottom: 2px solid #888;
+
+  background: #fff;
+}
+
+.declaration-checkbox {
+  display: flex;
+
+  gap: 10px;
+
+  align-items: flex-start;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+  color: #333;
+}
+
+.declaration-checkbox input {
+  margin-top: 3px;
+
+  width: 16px;
+  height: 16px;
+}
+
+/* =========================================================
+   SIGNATURES
+========================================================= */
+
+.signature-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 50px;
+
+  margin-top: 45px;
+}
+
+.signature-box {
+  text-align: center;
+
+  min-height: 100px;
+}
+
+.signature-space {
+  height: 60px;
+
+  border-bottom: 1px solid #555;
+
+  margin-bottom: 10px;
+}
+
+.signature-box strong,
+.signature-box span {
+  display: block;
+
+  font-size: 11px;
+}
+
+.signature-box span {
+  margin-top: 3px;
+
+  color: #555;
+}
+
+/* =========================================================
+   SAVE MESSAGE
+========================================================= */
+
+.save-message {
+  margin-top: 20px;
+
+  padding: 12px;
+
+  background: #eef7ee;
+
+  border: 1px solid #b9d8b9;
+
+  color: #285c28;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+/* =========================================================
+   TICKET BUTTONS
+========================================================= */
+
+.ticket-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 15px;
+
+  margin-top: 30px;
+}
+
+.ticket-actions .save-button {
+  width: 220px;
+
+  margin-top: 0;
+}
+
+.print-button {
+  width: 220px;
+
+  padding: 12px;
+
+  border: 0;
+
+  border-radius: 3px;
+
+  background: var(--navy);
+
+  color: #fff;
+
+  font-weight: 700;
+
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.print-button:hover {
+  background: #092d50;
+}
+
+/* =========================================================
+   SUBMITTED PAGE
+========================================================= */
+
+.submitted-page {
+  min-height: 100vh;
+
+  display: grid;
+
+  place-items: center;
+
+  padding: 30px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #061a30,
+      #f8f8f8
+    );
+}
+
+.submitted-card {
+  width: min(650px, 100%);
+
+  padding: 40px;
+
+  background: #fff;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.18);
+
+  text-align: center;
+}
+
+.submitted-check {
+  width: 62px;
+  height: 62px;
+
+  margin: 0 auto 15px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #e6b33d;
+
+  color: #fff;
+
+  font-size: 30px;
+}
+
+.submitted-card h1 {
+  margin: 0 0 10px;
+
+  color: var(--navy);
+}
+
+.submitted-card p {
+  color: #666;
+}
+
+.submitted-summary {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin: 25px 0;
+
+  text-align: left;
+}
+
+.submitted-summary div {
+  padding: 14px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 5px;
+}
+
+.submitted-summary span,
+.submitted-summary strong {
+  display: block;
+}
+
+.submitted-summary span {
+  color: #777;
+
+  font-size: 11px;
+}
+
+.submitted-summary strong {
+  margin-top: 4px;
+
+  color: #172030;
+}
+
+/* =========================================================
+   GOD IDOL - PAWN TICKET HEADER
+========================================================= */
+
+.god-idol {
+  position: absolute;
+
+  top: 18px;
+
+  right: 18px;
+
+  width: 65px;
+
+  z-index: 10;
+
+  pointer-events: none;
+}
+
+.god-idol img {
+  width: 100%;
+
+  height: auto;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+/* =========================================================
+   PRINCIPAL LOAN AMOUNT
+========================================================= */
+
+.principal-loan-block {
+  margin-top: 18px;
+
+  padding-top: 15px;
+
+  border-top: 1px solid #ddd;
+}
+
+.principal-loan-block label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  color: #34383e;
+
+  letter-spacing: 0.3px;
+}
+
+.principal-loan-value {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color: var(--gold);
+
+  font-size: 25px;
+
+  font-weight: 700;
+}
+
+.principal-loan-value span {
+  color: var(--gold);
+
+  font-size: 21px;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   CUSTOMER LOAN HISTORY
+========================================================= */
+
+.customer-loan-history {
+  margin-top: 25px;
+
+  padding: 20px;
+
+  border: 1px solid #d4af37;
+
+  border-radius: 8px;
+
+  background: #fffdf5;
+}
+
+.customer-loan-history h3 {
+  margin: 0 0 5px;
+
+  font-size: 20px;
+
+  color: #222;
+}
+
+.customer-loan-history table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  background: #fff;
+}
+
+.customer-loan-history th {
+  padding: 10px;
+
+  border: 1px solid #ddd;
+
+  text-align: left;
+
+  background: #f8f1d8;
+
+  font-weight: 600;
+}
+
+.customer-loan-history td {
+  padding: 10px;
+
+  border: 1px solid #ddd;
+}
+
+.customer-loan-history td:nth-child(4),
+.customer-loan-history td:nth-child(5) {
+  text-align: right;
+}
+
+.customer-loan-history .history-total {
+  font-size: 28px;
+
+  font-weight: 700;
+}
+
+.customer-loan-history button {
+  border: none;
+
+  border-radius: 5px;
+
+  padding: 9px 16px;
+
+  background: #222;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-weight: 600;
+}
+
+.customer-loan-history button:hover {
+  opacity: 0.9;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.site-footer {
+  width: 100% !important;
+
+  margin-top: 70px !important;
+
+  padding: 45px 6% 20px !important;
+
+  background: #001a35 !important;
+
+  color: #ffffff !important;
+
+  display: block !important;
+
+  position: relative !important;
+
+  clear: both !important;
+
+  overflow: hidden !important;
+}
+
+/* =========================================================
+   FOOTER MAIN ROW
+========================================================= */
+
+.footer-container {
+  width: 100% !important;
+
+  max-width: 1600px !important;
+
+  margin: 0 auto !important;
+
+  display: grid !important;
+
+  grid-template-columns: 1fr auto !important;
+
+  align-items: start !important;
+
+  column-gap: 60px !important;
+}
+
+/* =========================================================
+   FOOTER LEFT
+========================================================= */
+
+.footer-left {
+  text-align: left !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+}
+
+.footer-left h3 {
+  margin: 0 0 18px !important;
+
+  padding: 0 !important;
+
+  font-size: 24px !important;
+
+  line-height: 1.2 !important;
+
+  font-weight: 700 !important;
+
+  color: #ffffff !important;
+}
+
+.footer-left p {
+  margin: 0 0 12px !important;
+
+  padding: 0 !important;
+
+  font-size: 16px !important;
+
+  line-height: 1.5 !important;
+
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   FOOTER RIGHT
+========================================================= */
+
+.footer-right {
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  align-items: flex-end !important;
+
+  justify-content: flex-start !important;
+
+  text-align: right !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+}
+
+.footer-contact {
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  align-items: flex-end !important;
+
+  gap: 7px !important;
+
+  font-size: 16px !important;
+
+  line-height: 1.4 !important;
+
+  color: #ffffff !important;
+}
+
+.footer-contact strong {
+  display: block !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  font-size: 18px !important;
+
+  line-height: 1.3 !important;
+
+  color: #ffffff !important;
+}
+
+.footer-contact span {
+  display: block !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  font-size: 18px !important;
+
+  line-height: 1.3 !important;
+
+  font-weight: 700 !important;
+
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   REMOVE FOOTER LINKS
+========================================================= */
+
+.footer-links {
+  display: none !important;
+}
+
+.footer-links a {
+  display: none !important;
+}
+
+/* =========================================================
+   FOOTER COPYRIGHT
+========================================================= */
+
+.footer-bottom {
+  width: 100% !important;
+
+  margin: 35px auto 0 !important;
+
+  padding: 20px 0 0 !important;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+
+  display: flex !important;
+
+  justify-content: center !important;
+
+  align-items: center !important;
+
+  text-align: center !important;
+}
+
+.footer-bottom p {
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  text-align: center !important;
+
+  font-size: 13px !important;
+
+  line-height: 1.5 !important;
+
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .top-bar {
+    height: 50px;
+    padding: 0 20px;
+    font-size: 32px;
+  }
+
+  .main-header {
+    height: 82px;
+    padding: 0 25px;
+  }
+
+  .logo-space {
+    width: auto;
+    height: 82px;
+    gap: 15px;
+  }
+
+  .logo-space > img {
+    width: 76px;
+    height: 76px;
+  }
+
+  .header-god-images {
+    height: 82px;
+    gap: 8px;
+  }
+
+  .header-god-images img {
+    width: 65px;
+    height: 80px;
+  }
+
+  .hero {
+    height: 390px;
+    min-height: 390px;
+  }
+
+  .hero-copy {
+    width: 65%;
+    padding: 50px 30px;
+  }
+
+  .hero h1 {
+    font-size: 43px;
+  }
+
+  .value-badge {
+    right: 25px;
+    width: 92px;
+    height: 92px;
+  }
+
+  .calculator-section {
+    width: calc(100% - 50px);
+    margin-left: 25px;
+    margin-right: 25px;
+  }
+
+  .calculator-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .side-promo {
+    grid-column: 1 / -1;
+    min-height: 230px;
+    height: 230px;
+    background: #fff;
+  }
+
+  .side-promo img {
+    width: 100% !important;
+    height: 100% !important;
+
+    object-fit: contain !important;
+    object-position: center center !important;
+  }
+
+  .ticket-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pawn-ticket-container {
+    padding: 30px;
+  }
+
+  .site-footer {
+    margin-top: 60px !important;
+    padding: 40px 30px 20px !important;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr auto !important;
+    column-gap: 35px !important;
+  }
+
+  .footer-left h3 {
+    font-size: 21px !important;
+  }
+
+  .footer-left p {
+    font-size: 14px !important;
+  }
+
+  .footer-contact {
+    font-size: 14px !important;
+  }
+
+  .footer-contact strong {
+    font-size: 16px !important;
+  }
+
+  .footer-contact span {
+    font-size: 16px !important;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .top-bar {
+    height: auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 20px;
+  }
+
+  .top-bar > div {
+    white-space: normal;
+  }
+
+  /* HEADER */
+
+  .main-header {
+    height: 78px;
+    padding: 0 14px;
+  }
+
+  .logo-space {
+    width: auto;
+    height: 78px;
+    gap: 7px;
+  }
+
+  .logo-space > img {
+    width: 58px;
+    height: 68px;
+  }
+
+  .header-god-images {
+    height: 78px;
+    gap: 4px;
+  }
+
+  .header-god-images img {
+    width: 48px;
+    height: 65px;
+  }
+
+  .phone-icon {
+    display: none;
+  }
+
+  .header-contact {
+    gap: 8px;
+  }
+
+  .header-contact strong {
+    font-size: 12px;
+  }
+
+  .header-contact span {
+    font-size: 9px;
+  }
+
+  /* HERO */
+
+  .hero {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .hero-image-wrap {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .hero-image-wrap img {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .hero-copy {
+    width: 100%;
+
+    height: 430px;
+    min-height: 430px;
+
+    padding: 40px 24px;
+
+    background:
+      linear-gradient(
+        90deg,
+        rgba(3, 20, 37, 0.98),
+        rgba(3, 20, 37, 0.78),
+        rgba(3, 20, 37, 0.42)
+      );
+  }
+
+  .hero h1 {
+    font-size: 37px;
+  }
+
+  .hero-features {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 260px;
+  }
+
+  .value-badge {
+    top: 20px;
+    right: 18px;
+    width: 80px;
+    height: 80px;
+  }
+
+  .value-badge div {
+    font-size: 7px;
+  }
+
+  .value-badge strong {
+    font-size: 10px;
+  }
+
+  .value-badge span {
+    font-size: 9px;
+  }
+
+  /* CALCULATOR */
+
+  .calculator-section {
+    width: calc(100% - 28px);
+    margin: 25px 14px 0;
+  }
+
+  .calculator-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .calculator-panel {
+    padding: 23px 20px;
+  }
+
+  .loan-details-panel {
+    padding: 25px 20px;
+  }
+
+  .side-promo {
+    grid-column: auto;
+
+    width: 100%;
+
+    height: auto;
+
+    min-height: 230px;
+
+    background: #fff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+  }
+
+  .side-promo img {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    max-width: 100% !important;
+    max-height: 100% !important;
+
+    object-fit: contain !important;
+    object-position: center center !important;
+
+    background: #fff;
+  }
+
+  /* SECURITY */
+
+  .secure-banner {
+    width: calc(100% - 28px);
+
+    margin: 60px 14px 0;
+
+    flex-wrap: wrap;
+
+    padding: 20px;
+  }
+
+  .secure-copy {
+    min-width: calc(100% - 70px);
+  }
+
+  .secondary-button {
+    margin-left: 65px;
+  }
+
+  .vault-art {
+    display: none;
+  }
+
+  /* PAWN TICKET */
+
+  .pawn-ticket-section {
+    padding: 40px 14px;
+  }
+
+  .pawn-ticket-container {
+    padding: 20px 15px;
+    border: 1px solid #999;
+  }
+
+  .pawn-ticket-heading h2 {
+    font-size: 27px;
+  }
+
+  .god-idol {
+    top: 12px;
+    right: 12px;
+    width: 50px;
+  }
+
+  .ticket-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-fields {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .ticket-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .signature-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .ticket-actions {
+    flex-direction: column;
+  }
+
+  .ticket-actions .save-button,
+  .print-button {
+    width: 100%;
+  }
+
+  .weight-table {
+    overflow-x: auto;
+  }
+
+  .weight-header,
+  .weight-row {
+    min-width: 500px;
+  }
+
+  .submitted-summary {
+    grid-template-columns: 1fr;
+  }
+
+  /* FOOTER MOBILE */
+
+  .site-footer {
+    width: 100% !important;
+
+    margin-top: 50px !important;
+
+    padding: 30px 16px 18px !important;
+
+    background: #001a35 !important;
+
+    color: #ffffff !important;
+  }
+
+  .footer-container {
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns: minmax(0, 1fr) auto !important;
+
+    column-gap: 15px !important;
+
+    align-items: start !important;
+  }
+
+  .footer-left {
+    text-align: left !important;
+    min-width: 0 !important;
+  }
+
+  .footer-left h3 {
+    margin: 0 0 12px !important;
+
+    font-size: 17px !important;
+
+    line-height: 1.3 !important;
+
+    color: #ffffff !important;
+  }
+
+  .footer-left p {
+    margin: 0 0 8px !important;
+
+    font-size: 12px !important;
+
+    line-height: 1.5 !important;
+
+    color: #ffffff !important;
+  }
+
+  .footer-right {
+    width: auto !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: flex-end !important;
+
+    text-align: right !important;
+  }
+
+  .footer-contact {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: flex-end !important;
+
+    gap: 5px !important;
+
+    margin: 0 !important;
+
+    font-size: 12px !important;
+
+    line-height: 1.4 !important;
+
+    white-space: nowrap !important;
+
+    color: #ffffff !important;
+  }
+
+  .footer-contact strong {
+    font-size: 14px !important;
+    color: #ffffff !important;
+  }
+
+  .footer-contact span {
+    font-size: 13px !important;
+    color: #ffffff !important;
+  }
+
+  .footer-links {
+    display: none !important;
+  }
+
+  .footer-bottom {
+    width: 100% !important;
+
+    margin: 25px auto 0 !important;
+
+    padding: 15px 0 0 !important;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+
+    display: flex !important;
+
+    justify-content: center !important;
+
+    align-items: center !important;
+
+    text-align: center !important;
+  }
+
+  .footer-bottom p {
+    width: 100% !important;
+
+    margin: 0 !important;
+
+    font-size: 10px !important;
+
+    line-height: 1.5 !important;
+
+    text-align: center !important;
+
+    color: #ffffff !important;
+  }
+}
+
+/* =========================================================
+   PRINT PAWN TICKET
+========================================================= */
+
+@media print {
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .pawn-ticket-section,
+  .pawn-ticket-section * {
+    visibility: visible !important;
+  }
+
+  .pawn-ticket-section {
+    position: absolute !important;
+
+    left: 0 !important;
+    top: 0 !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #fff !important;
+  }
+
+  .pawn-ticket-container {
+    width: 100% !important;
+
+    max-width: none !important;
+
+    margin: 0 !important;
+
+    padding: 20px !important;
+
+    border: 0 !important;
+
+    box-shadow: none !important;
+
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .ticket-actions,
+  .save-message,
+  .customer-loan-history {
+    display: none !important;
+  }
+
+  .ticket-field input,
+  .ticket-field select,
+  .ticket-field textarea,
+  .ticket-input-prefix,
+  .income-box,
+  .weight-table {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  input,
+  textarea,
+  select {
+    color: #000 !important;
+
+    background: transparent !important;
+
+    box-shadow: none !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: transparent !important;
+  }
+
+  .ticket-field input,
+  .ticket-field select,
+  .ticket-field textarea {
+    border: 1px solid #777 !important;
+  }
+
+  .ticket-input-prefix {
+    border: 1px solid #777 !important;
+  }
+
+  .income-box {
+    border: 1px solid #777 !important;
+  }
+
+  .weight-table {
+    border: 2px solid #555 !important;
+  }
+
+  .weight-header span,
+  .weight-row > * {
+    border-right: 1px solid #777 !important;
+    border-bottom: 1px solid #777 !important;
+  }
+
+  .weight-header span:last-child,
+  .weight-row > *:last-child {
+    border-right: 0 !important;
+  }
+
+  .weight-row:last-child > * {
+    border-bottom: 0 !important;
+  }
+
+  .pawn-ticket-heading,
+  .ticket-top-grid,
+  .ticket-fields,
+  .ticket-bottom-grid,
+  .ticket-declaration,
+  .signature-grid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .printing-pawn-ticket .customer-loan-history {
+    display: none !important;
+  }
+
+  .printing-pawn-ticket .ticket-actions {
+    display: none !important;
+  }
+
+  .printing-pawn-ticket .save-message {
+    display: none !important;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "mahaveer-gold-loan-server",
+  "version": "1.0.0",
+  "description": "Mahaveer Gold Loan Backend",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "googleapis": "^180.0.0",
+    "react-router-dom": "^7.18.3"
+  },
+  "devDependencies": {
+    "globals": "^17.12.0"
+  }
+}
