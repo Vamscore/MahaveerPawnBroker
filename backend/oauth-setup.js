@@ -50,7 +50,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(
       req.url,
-      "http://localhost:5000"
+      "https://mahaveer-pawn-broker-c32n.vercel.app"
     );
 
     console.log("Callback received:", url.pathname);
@@ -114,6 +114,6 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(5000, () => {
   console.log(
-    "OAuth callback server running on http://localhost:5000"
+    "OAuth callback server running on https://mahaveer-pawn-broker-c32n.vercel.app"
   );
 });
