@@ -4,13 +4,22 @@ import dotenv from "dotenv";
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-if (!process.env.VERCEL) {
-  dotenv.config({ path: "backend/.env" });
-} else {
+/* =========================================================
+   ENVIRONMENT
+========================================================= */
+
+if (process.env.VERCEL) {
   dotenv.config();
+} else {
+  dotenv.config({ path: "backend/.env" });
 }
 
+/* =========================================================
+   APP
+========================================================= */
+
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
 /* =========================================================
@@ -26,6 +35,13 @@ app.use(
 
 app.use(
   express.json({
+    limit: "15mb",
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
     limit: "15mb",
   })
 );
@@ -50,14 +66,6 @@ const GOOGLE_PRIVATE_KEY =
 
 const GOOGLE_DRIVE_FOLDER_ID =
   process.env.GOOGLE_DRIVE_FOLDER_ID || "";
-
-/*
-   OAuth credentials for Google Drive.
-
-   IMPORTANT:
-   Drive will NOT use the service account.
-   Drive will use your personal Google OAuth account.
-*/
 
 const GOOGLE_OAUTH_CLIENT_ID =
   process.env.GOOGLE_OAUTH_CLIENT_ID;
@@ -96,8 +104,8 @@ const OWNER_ACCOUNTS = [
 );
 
 /* =========================================================
-   GOOGLE SHEETS AUTH
-   SERVICE ACCOUNT ONLY
+   GOOGLE SHEETS
+   SERVICE ACCOUNT
 ========================================================= */
 
 let sheets = null;
@@ -121,10 +129,11 @@ if (
         ],
       });
 
-    sheets = google.sheets({
-      version: "v4",
-      auth: sheetsAuth,
-    });
+    sheets =
+      google.sheets({
+        version: "v4",
+        auth: sheetsAuth,
+      });
 
     console.log(
       "GOOGLE SHEETS CLIENT: READY"
@@ -135,10 +144,14 @@ if (
       error.message
     );
   }
+} else {
+  console.warn(
+    "GOOGLE SHEETS CLIENT: NOT CONFIGURED"
+  );
 }
 
 /* =========================================================
-   GOOGLE DRIVE AUTH
+   GOOGLE DRIVE
    OAUTH USER ACCOUNT
 ========================================================= */
 
@@ -162,10 +175,11 @@ if (
         GOOGLE_OAUTH_REFRESH_TOKEN,
     });
 
-    drive = google.drive({
-      version: "v3",
-      auth: oauth2Client,
-    });
+    drive =
+      google.drive({
+        version: "v3",
+        auth: oauth2Client,
+      });
 
     console.log(
       "GOOGLE DRIVE CLIENT: OAUTH READY"
@@ -180,21 +194,17 @@ if (
   console.warn(
     "GOOGLE DRIVE CLIENT: NOT CONFIGURED"
   );
-
-  console.warn(
-    "Add GOOGLE_OAUTH_REFRESH_TOKEN to .env"
-  );
 }
 
 /* =========================================================
-   GOOGLE SHEET RANGE
+   SHEET RANGE
 ========================================================= */
 
 const SHEET_RANGE =
   `${GOOGLE_SHEET_NAME}!A:AB`;
 
 /* =========================================================
-   GOOGLE SHEET HEADERS
+   SHEET HEADERS
 ========================================================= */
 
 const SHEET_HEADERS = [
@@ -229,7 +239,7 @@ const SHEET_HEADERS = [
 ];
 
 /* =========================================================
-   CHECK SHEETS CONNECTION
+   HELPERS
 ========================================================= */
 
 function checkSheetsConnection(res) {
@@ -237,7 +247,7 @@ function checkSheetsConnection(res) {
     res.status(500).json({
       success: false,
       message:
-        "Google Sheets is not configured. Check your .env file.",
+        "Google Sheets is not configured. Check Vercel Environment Variables.",
     });
 
     return false;
@@ -246,14 +256,10 @@ function checkSheetsConnection(res) {
   return true;
 }
 
-/* =========================================================
-   CHECK DRIVE CONNECTION
-========================================================= */
-
 function checkDriveConnection() {
   if (!drive) {
     throw new Error(
-      "Google Drive OAuth is not configured. Add GOOGLE_OAUTH_REFRESH_TOKEN to your .env file."
+      "Google Drive OAuth is not configured. Check GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET and GOOGLE_OAUTH_REFRESH_TOKEN."
     );
   }
 }
@@ -281,10 +287,6 @@ async function ensureSheetHeaders() {
   const firstRow =
     response.data.values?.[0] || [];
 
-  /*
-     If completely empty, create all headers.
-  */
-
   if (firstRow.length === 0) {
     await sheets.spreadsheets.values.update({
       spreadsheetId:
@@ -304,12 +306,6 @@ async function ensureSheetHeaders() {
 
     return;
   }
-
-  /*
-     Existing sheet:
-     preserve existing columns and make sure
-     the photo columns exist at AA and AB.
-  */
 
   if (
     firstRow[26] !==
@@ -343,6 +339,12 @@ async function ensureSheetHeaders() {
 ========================================================= */
 
 async function getSheetRows() {
+  if (!sheets) {
+    throw new Error(
+      "Google Sheets is not configured."
+    );
+  }
+
   const response =
     await sheets.spreadsheets.values.get({
       spreadsheetId:
@@ -456,7 +458,7 @@ function rowToTicket(row) {
 ========================================================= */
 
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
 
     message:
@@ -472,6 +474,14 @@ app.get("/", (req, res) => {
       drive
         ? "OAuth User Drive"
         : "Not configured",
+
+    owners:
+      OWNER_ACCOUNTS.length,
+
+    environment:
+      process.env.VERCEL
+        ? "Vercel"
+        : "Local",
   });
 });
 
@@ -510,7 +520,8 @@ app.post(
       const owner =
         OWNER_ACCOUNTS.find(
           (account) =>
-            account.mobile ===
+            String(account.mobile)
+              .replace(/\D/g, "") ===
             mobile
         );
 
@@ -543,7 +554,7 @@ app.post(
       }
 
       if (
-        pin !== owner.pin
+        pin !== String(owner.pin).trim()
       ) {
         return res.status(401).json({
           success: false,
@@ -558,8 +569,10 @@ app.post(
 
       return res.status(200).json({
         success: true,
+
         message:
           "Login successful.",
+
         mobile,
       });
     } catch (error) {
@@ -578,10 +591,7 @@ app.post(
 );
 
 /* =========================================================
-   UPLOAD PHOTO TO GOOGLE DRIVE
-   IMPORTANT:
-   THIS USES OAUTH USER ACCOUNT,
-   NOT SERVICE ACCOUNT.
+   DRIVE PHOTO UPLOAD
 ========================================================= */
 
 async function uploadPhotoToDrive(
@@ -632,19 +642,10 @@ async function uploadPhotoToDrive(
     );
   }
 
-  /*
-     File metadata.
-  */
-
   const requestBody = {
     name: fileName,
     mimeType,
   };
-
-  /*
-     Upload into your existing
-     Google Drive folder.
-  */
 
   if (
     GOOGLE_DRIVE_FOLDER_ID
@@ -684,11 +685,6 @@ async function uploadPhotoToDrive(
     );
   }
 
-  /*
-     Make image accessible through
-     its Google Drive link.
-  */
-
   try {
     await drive.permissions.create({
       fileId,
@@ -721,9 +717,7 @@ app.post(
   async (req, res) => {
     try {
       if (
-        !checkSheetsConnection(
-          res
-        )
+        !checkSheetsConnection(res)
       ) {
         return;
       }
@@ -733,8 +727,7 @@ app.post(
 
       if (
         !ticket ||
-        typeof ticket !==
-          "object"
+        typeof ticket !== "object"
       ) {
         return res.status(400).json({
           success: false,
@@ -744,8 +737,7 @@ app.post(
       }
 
       if (
-        ticket.declarationAccepted !==
-        true
+        ticket.declarationAccepted !== true
       ) {
         return res.status(400).json({
           success: false,
@@ -756,8 +748,7 @@ app.post(
 
       const customerId =
         String(
-          ticket.customerId ||
-            ""
+          ticket.customerId || ""
         ).trim();
 
       if (!customerId) {
@@ -770,8 +761,7 @@ app.post(
 
       const customerName =
         String(
-          ticket.customerName ||
-            ""
+          ticket.customerName || ""
         ).trim();
 
       if (!customerName) {
@@ -803,20 +793,44 @@ app.post(
       }
 
       /* -----------------------------------------------------
-         INTEREST CALCULATION
+         INTEREST
       ----------------------------------------------------- */
 
       const interestRate =
         Number(
-          ticket.interestRate ||
-            0
+          ticket.interestRate || 0
         );
 
       const loanTenure =
         Number(
-          ticket.loanTenure ||
-            0
+          ticket.loanTenure || 0
         );
+
+      if (
+        !Number.isFinite(
+          interestRate
+        ) ||
+        interestRate < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid interest rate.",
+        });
+      }
+
+      if (
+        !Number.isFinite(
+          loanTenure
+        ) ||
+        loanTenure < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid loan tenure.",
+        });
+      }
 
       const monthlyInterest =
         loanAmount *
@@ -847,9 +861,7 @@ app.post(
         savedAt;
 
       /* -----------------------------------------------------
-         GOOGLE DRIVE PHOTOS
-
-         These now use OAuth user Drive.
+         PHOTOS
       ----------------------------------------------------- */
 
       let personPhotoUrl = "";
@@ -862,7 +874,6 @@ app.post(
         personPhotoUrl =
           await uploadPhotoToDrive(
             ticket.personPhoto,
-
             `${id}-customer-photo.jpg`
           );
       }
@@ -873,7 +884,6 @@ app.post(
         jewelleryPhotoUrl =
           await uploadPhotoToDrive(
             ticket.jewelleryPhoto,
-
             `${id}-jewellery-photo.jpg`
           );
       }
@@ -954,7 +964,8 @@ app.post(
         paymentStatus:
           "ACTIVE",
 
-        paidAt: null,
+        paidAt:
+          null,
 
         createdAt,
 
@@ -966,92 +977,63 @@ app.post(
       };
 
       /* -----------------------------------------------------
-         MAKE SURE SHEET HEADERS EXIST
+         HEADERS
       ----------------------------------------------------- */
 
       await ensureSheetHeaders();
 
       /* -----------------------------------------------------
-         SAVE TO GOOGLE SHEETS
+         SAVE TO SHEETS
       ----------------------------------------------------- */
 
-      await sheets.spreadsheets.values.append(
-        {
-          spreadsheetId:
-            GOOGLE_SHEET_ID,
+      await sheets.spreadsheets.values.append({
+        spreadsheetId:
+          GOOGLE_SHEET_ID,
 
-          range:
-            SHEET_RANGE,
+        range:
+          SHEET_RANGE,
 
-          valueInputOption:
-            "RAW",
+        valueInputOption:
+          "RAW",
 
-          insertDataOption:
-            "INSERT_ROWS",
+        insertDataOption:
+          "INSERT_ROWS",
 
-          requestBody: {
-            values: [
-              [
-                savedTicket.id,
-
-                savedTicket.customerId,
-
-                savedTicket.customerName,
-
-                savedTicket.fatherHusbandName,
-
-                savedTicket.fullAddress,
-
-                savedTicket.redemptionTime,
-
-                savedTicket.particulars,
-
-                savedTicket.annualIncome,
-
-                savedTicket.goldWeight,
-
-                savedTicket.loanTenure,
-
-                savedTicket.goldPrice,
-
-                savedTicket.interestRate,
-
-                savedTicket.principalAmount,
-
-                savedTicket.loanAmount,
-
-                savedTicket.monthlyInterest,
-
-                savedTicket.totalInterest,
-
-                savedTicket.totalAmountToPay,
-
-                savedTicket.amountInWords,
-
-                savedTicket.totalAmountInWords,
-
-                savedTicket.ticketNumber,
-
-                savedTicket.ticketDate,
-
-                savedTicket.declarationAccepted,
-
-                savedTicket.paymentStatus,
-
-                "",
-
-                savedTicket.createdAt,
-
-                savedTicket.savedAt,
-
-                savedTicket.personPhotoUrl,
-
-                savedTicket.jewelleryPhotoUrl,
-              ],
+        requestBody: {
+          values: [
+            [
+              savedTicket.id,
+              savedTicket.customerId,
+              savedTicket.customerName,
+              savedTicket.fatherHusbandName,
+              savedTicket.fullAddress,
+              savedTicket.redemptionTime,
+              savedTicket.particulars,
+              savedTicket.annualIncome,
+              savedTicket.goldWeight,
+              savedTicket.loanTenure,
+              savedTicket.goldPrice,
+              savedTicket.interestRate,
+              savedTicket.principalAmount,
+              savedTicket.loanAmount,
+              savedTicket.monthlyInterest,
+              savedTicket.totalInterest,
+              savedTicket.totalAmountToPay,
+              savedTicket.amountInWords,
+              savedTicket.totalAmountInWords,
+              savedTicket.ticketNumber,
+              savedTicket.ticketDate,
+              savedTicket.declarationAccepted,
+              savedTicket.paymentStatus,
+              "",
+              savedTicket.createdAt,
+              savedTicket.savedAt,
+              savedTicket.personPhotoUrl,
+              savedTicket.jewelleryPhotoUrl,
             ],
-          },
-        }
-      );
+          ],
+        },
+      });
 
       console.log(
         `PAWN TICKET SAVED: ${id}`
@@ -1074,22 +1056,21 @@ app.post(
         error
       );
 
-      /*
-         Give a more useful Drive error
-         to the frontend.
-      */
+      const message =
+        String(
+          error?.message || ""
+        );
 
       if (
-        String(
-          error.message || ""
-        ).includes(
+        message.toLowerCase().includes(
           "storage quota"
         )
       ) {
         return res.status(500).json({
           success: false,
+
           message:
-            "Google Drive storage error. Make sure Drive uses OAuth user authentication and GOOGLE_OAUTH_REFRESH_TOKEN is configured.",
+            "Google Drive storage error. Make sure Drive is using your OAuth user account and the refresh token is valid.",
         });
       }
 
@@ -1097,7 +1078,7 @@ app.post(
         success: false,
 
         message:
-          error.message ||
+          message ||
           "Server error while saving pawn ticket.",
       });
     }
@@ -1113,17 +1094,14 @@ app.patch(
   async (req, res) => {
     try {
       if (
-        !checkSheetsConnection(
-          res
-        )
+        !checkSheetsConnection(res)
       ) {
         return;
       }
 
       const ticketId =
         String(
-          req.params.id ||
-            ""
+          req.params.id || ""
         ).trim();
 
       if (!ticketId) {
@@ -1205,36 +1183,29 @@ app.patch(
       updatedTicket.paidAt =
         paidAt;
 
-      /*
-         W = paymentStatus
-         X = paidAt
-      */
+      await sheets.spreadsheets.values.update({
+        spreadsheetId:
+          GOOGLE_SHEET_ID,
 
-      await sheets.spreadsheets.values.update(
-        {
-          spreadsheetId:
-            GOOGLE_SHEET_ID,
+        range:
+          `${GOOGLE_SHEET_NAME}!W${
+            rowIndex + 1
+          }:X${
+            rowIndex + 1
+          }`,
 
-          range:
-            `${GOOGLE_SHEET_NAME}!W${
-              rowIndex + 1
-            }:X${
-              rowIndex + 1
-            }`,
+        valueInputOption:
+          "RAW",
 
-          valueInputOption:
-            "RAW",
-
-          requestBody: {
-            values: [
-              [
-                "PAID",
-                paidAt,
-              ],
+        requestBody: {
+          values: [
+            [
+              "PAID",
+              paidAt,
             ],
-          },
-        }
-      );
+          ],
+        },
+      });
 
       console.log(
         `LOAN MARKED PAID: ${ticketId}`
@@ -1266,7 +1237,7 @@ app.patch(
 );
 
 /* =========================================================
-   GET CUSTOMER LOAN HISTORY
+   CUSTOMER HISTORY
 ========================================================= */
 
 app.get(
@@ -1274,9 +1245,7 @@ app.get(
   async (req, res) => {
     try {
       if (
-        !checkSheetsConnection(
-          res
-        )
+        !checkSheetsConnection(res)
       ) {
         return;
       }
@@ -1310,14 +1279,12 @@ app.get(
               )
                 .trim()
                 .toLowerCase() ===
-              customerId
-                .toLowerCase()
+              customerId.toLowerCase()
           )
           .map(rowToTicket);
 
       if (
-        customerTickets.length ===
-        0
+        customerTickets.length === 0
       ) {
         return res.status(200).json({
           success: true,
@@ -1378,9 +1345,7 @@ app.get(
   async (req, res) => {
     try {
       if (
-        !checkSheetsConnection(
-          res
-        )
+        !checkSheetsConnection(res)
       ) {
         return;
       }
@@ -1433,18 +1398,23 @@ app.get(
   async (req, res) => {
     try {
       if (
-        !checkSheetsConnection(
-          res
-        )
+        !checkSheetsConnection(res)
       ) {
         return;
       }
 
       const ticketId =
         String(
-          req.params.id ||
-            ""
+          req.params.id || ""
         ).trim();
+
+      if (!ticketId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Ticket ID is required.",
+        });
+      }
 
       await ensureSheetHeaders();
 
@@ -1492,56 +1462,154 @@ app.get(
     }
   }
 );
+
 /* =========================================================
-   SERVER STARTUP / VERCEL
+   OAUTH STATUS
 ========================================================= */
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log("");
-    console.log("====================================");
-    console.log("Mahaveer Gold backend is running");
-    console.log(`http://localhost:${PORT}`);
-    console.log("====================================");
+app.get(
+  "/api/health/google",
+  (req, res) => {
+    return res.status(200).json({
+      success: true,
 
-    console.log(
-      "OWNER ACCOUNTS:",
-      OWNER_ACCOUNTS.length
+      googleSheets:
+        sheets !== null,
+
+      googleDrive:
+        drive !== null,
+
+      sheetIdConfigured:
+        Boolean(GOOGLE_SHEET_ID),
+
+      driveFolderConfigured:
+        Boolean(
+          GOOGLE_DRIVE_FOLDER_ID
+        ),
+
+      oauthConfigured:
+        Boolean(
+          GOOGLE_OAUTH_CLIENT_ID &&
+          GOOGLE_OAUTH_CLIENT_SECRET &&
+          GOOGLE_OAUTH_REFRESH_TOKEN
+        ),
+    });
+  }
+);
+
+/* =========================================================
+   404 HANDLER
+========================================================= */
+
+app.use(
+  (req, res) => {
+    res.status(404).json({
+      success: false,
+
+      message:
+        "API route not found.",
+
+      path:
+        req.originalUrl,
+    });
+  }
+);
+
+/* =========================================================
+   ERROR HANDLER
+========================================================= */
+
+app.use(
+  (error, req, res, next) => {
+    console.error(
+      "UNHANDLED EXPRESS ERROR:",
+      error
     );
 
-    console.log(
-      "GOOGLE SHEETS:",
-      sheets
-        ? "CONNECTED"
-        : "NOT CONFIGURED"
-    );
+    if (
+      res.headersSent
+    ) {
+      return next(error);
+    }
 
-    console.log(
-      "GOOGLE DRIVE:",
-      drive
-        ? "OAUTH CONNECTED"
-        : "NOT CONFIGURED"
-    );
+    return res.status(500).json({
+      success: false,
 
-    console.log(
-      "DRIVE FOLDER:",
-      GOOGLE_DRIVE_FOLDER_ID
-        ? "CONFIGURED"
-        : "NOT CONFIGURED"
-    );
+      message:
+        error?.message ||
+        "Internal server error.",
+    });
+  }
+);
 
-    console.log(
-      "SHEET:",
-      GOOGLE_SHEET_NAME
-    );
+/* =========================================================
+   LOCAL SERVER
+========================================================= */
 
-    console.log(
-      "LOGIN MODE: OWNER MOBILE + PIN"
-    );
+if (!process.env.VERCEL) {
+  app.listen(
+    PORT,
+    () => {
+      console.log("");
+      console.log(
+        "===================================="
+      );
+      console.log(
+        "Mahaveer Gold backend is running"
+      );
+      console.log(
+        `http://localhost:${PORT}`
+      );
+      console.log(
+        "===================================="
+      );
 
-    console.log("====================================");
-    console.log("");
-  });
+      console.log(
+        "OWNER ACCOUNTS:",
+        OWNER_ACCOUNTS.length
+      );
+
+      console.log(
+        "GOOGLE SHEETS:",
+        sheets
+          ? "CONNECTED"
+          : "NOT CONFIGURED"
+      );
+
+      console.log(
+        "GOOGLE DRIVE:",
+        drive
+          ? "OAUTH CONNECTED"
+          : "NOT CONFIGURED"
+      );
+
+      console.log(
+        "DRIVE FOLDER:",
+        GOOGLE_DRIVE_FOLDER_ID
+          ? "CONFIGURED"
+          : "NOT CONFIGURED"
+      );
+
+      console.log(
+        "SHEET:",
+        GOOGLE_SHEET_NAME
+      );
+
+      console.log(
+        "LOGIN MODE:",
+        "OWNER MOBILE + PIN"
+      );
+
+      console.log(
+        "===================================="
+      );
+      console.log("");
+    }
+  );
 }
+
+/* =========================================================
+   VERCEL EXPORT
+========================================================= */
 
 export default app;
