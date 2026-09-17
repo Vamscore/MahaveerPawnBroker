@@ -1046,6 +1046,90 @@ function PawnTicketForm({ loanData = {} }) {
       <div className="pawn-ticket-container">
 
         {/* =================================================
+            MOBILE PAWN TICKET HEADER FIX
+            Keeps both logos inside the ticket on iPhone/Android.
+            Desktop layout is unchanged.
+        ================================================= */}
+        <style>{`
+          @media (max-width: 768px) {
+            .pawn-ticket-container {
+              width: 100% !important;
+              max-width: 100% !important;
+              overflow-x: hidden !important;
+              box-sizing: border-box !important;
+            }
+
+            .pawn-ticket-heading {
+              width: 100% !important;
+              max-width: 100% !important;
+              display: grid !important;
+              grid-template-columns: clamp(58px, 18vw, 78px) minmax(0, 1fr) clamp(58px, 18vw, 78px) !important;
+              align-items: center !important;
+              justify-items: center !important;
+              gap: 4px !important;
+              overflow: hidden !important;
+              box-sizing: border-box !important;
+            }
+
+            .pawn-ticket-heading .ticket-left-image,
+            .pawn-ticket-heading .ticket-god-image {
+              width: 100% !important;
+              max-width: 78px !important;
+              height: auto !important;
+              max-height: 78px !important;
+              object-fit: contain !important;
+              display: block !important;
+              margin: 0 !important;
+            }
+
+            .pawn-ticket-heading .ticket-heading-content {
+              width: 100% !important;
+              min-width: 0 !important;
+              max-width: 100% !important;
+              overflow: hidden !important;
+              box-sizing: border-box !important;
+              text-align: center !important;
+            }
+
+            .pawn-ticket-heading .ticket-heading-content h2 {
+              max-width: 100% !important;
+              margin-left: 0 !important;
+              margin-right: 0 !important;
+              font-size: clamp(24px, 7vw, 34px) !important;
+              line-height: 1.05 !important;
+              white-space: nowrap !important;
+            }
+
+            .pawn-ticket-heading .pawn-shop-address {
+              font-size: clamp(11px, 3.2vw, 15px) !important;
+              line-height: 1.25 !important;
+              overflow-wrap: anywhere !important;
+            }
+          }
+
+          @media (max-width: 360px) {
+            .pawn-ticket-heading {
+              grid-template-columns: 54px minmax(0, 1fr) 54px !important;
+              gap: 2px !important;
+            }
+
+            .pawn-ticket-heading .ticket-left-image,
+            .pawn-ticket-heading .ticket-god-image {
+              max-width: 54px !important;
+              max-height: 54px !important;
+            }
+
+            .pawn-ticket-heading .ticket-heading-content h2 {
+              font-size: 22px !important;
+            }
+
+            .pawn-ticket-heading .pawn-shop-address {
+              font-size: 10px !important;
+            }
+          }
+        `}</style>
+
+        {/* =================================================
             PAWN TICKET HEADER
         ================================================= */}
 
@@ -1080,6 +1164,12 @@ function PawnTicketForm({ loanData = {} }) {
             src="/assets/mahaveer-logo.png"
             alt="Mahaveer Logo"
             className="ticket-god-image"
+            style={{
+              maxWidth: "100%",
+              height: "auto",
+              objectFit: "contain",
+              display: "block",
+            }}
           />
 
         </div>
@@ -1184,7 +1274,7 @@ function PawnTicketForm({ loanData = {} }) {
           <div className="ticket-field full-width">
 
             <label htmlFor="fullAddress">
-              Full Address
+              Full Address with Phone Number
             </label>
 
             <textarea
