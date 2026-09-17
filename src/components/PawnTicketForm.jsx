@@ -1066,9 +1066,10 @@ function PawnTicketForm({ loanData = {} }) {
             <h2>MAHAVEER</h2>
 
             <p>PAWN BROKER</p>
+            <span>Estd. 2004</span>
 
             <p className="pawn-shop-address">
-              18-4-126A, Railway Colony Ext.<br />Estd. 2004<br />
+              18-4-126A, Railway Colony Ext.<br />
               TIRUPATI- 517501<br />
               94404 82058
             </p>
