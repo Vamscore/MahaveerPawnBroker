@@ -20,13 +20,175 @@ const initialForm = {
   interestRate: "",
 };
 
+
+/* =========================================================
+   MOBILE RESPONSIVE FIX
+   Desktop layout is intentionally left unchanged.
+   These rules only apply to screens 768px and below.
+   ========================================================= */
+
+function ResponsiveMobileStyles() {
+  return (
+    <style>{`
+      @media (max-width: 768px) {
+        html,
+        body,
+        #root {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .site-shell {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .calculator-section {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 16px !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+
+        .calculator-grid {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          gap: 16px !important;
+          box-sizing: border-box !important;
+        }
+
+        .calculator-panel,
+        .loan-details-panel,
+        .side-promo {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .input-with-suffix,
+        .money-input,
+        .rate-input {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .input-with-suffix input,
+        .money-input input,
+        .rate-input input {
+          min-width: 0 !important;
+          width: 1% !important;
+          flex: 1 1 auto !important;
+          box-sizing: border-box !important;
+        }
+
+        .input-with-suffix span,
+        .money-input span,
+        .rate-input span {
+          flex: 0 0 auto !important;
+          white-space: nowrap !important;
+        }
+
+        .calculator-panel select {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .loan-details-panel {
+          overflow: hidden !important;
+        }
+
+        .loan-details-panel .detail-block {
+          width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        .loan-details-panel small {
+          display: block !important;
+          max-width: 100% !important;
+          overflow-wrap: anywhere !important;
+        }
+
+        .side-promo {
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .side-promo > div:first-child {
+          width: 100% !important;
+          height: 200px !important;
+          min-height: 200px !important;
+          flex: 0 0 200px !important;
+          box-sizing: border-box !important;
+        }
+
+        .side-promo img {
+          max-width: 100% !important;
+        }
+
+        .side-promo button {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+      }
+
+      @media (max-width: 390px) {
+        .calculator-section {
+          padding: 12px !important;
+        }
+
+        .calculator-grid {
+          gap: 12px !important;
+        }
+
+        .calculator-panel h2 {
+          font-size: 24px !important;
+          line-height: 1.15 !important;
+        }
+
+        .calculator-panel label {
+          font-size: 16px !important;
+        }
+
+        .calculator-panel input,
+        .calculator-panel select {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        .side-promo > div:first-child {
+          height: 180px !important;
+          min-height: 180px !important;
+          flex-basis: 180px !important;
+        }
+      }
+    `}</style>
+  );
+}
+
 /* =========================================================
    APP
 ========================================================= */
 
 function App() {
   return (
-    <Routes>
+    <>
+      <ResponsiveMobileStyles />
+      <Routes>
       {/* OWNER LOGIN */}
       <Route
         path="/"
@@ -62,6 +224,7 @@ function App() {
         }
       />
     </Routes>
+    </>
   );
 }
 
@@ -956,7 +1119,8 @@ function Home() {
           <div className="footer-left">
 
             <h3>
-              MAHAVEER Pawn Broker
+              MAHAVEER Pawn Broker <br />
+               Estd. 2004
             </h3>
 
             <p>
