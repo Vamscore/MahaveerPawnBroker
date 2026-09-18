@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL =
-  "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
+  // "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
+      "http://localhost:5000/api/pawn-tickets";
 
 /* =========================================================
    TODAY'S DATE
@@ -115,6 +116,7 @@ function numberToWords(number) {
    IMAGE UPLOAD HELPER
    Compresses selected photos before sending them to backend.
 ========================================================= */
+
 function imageFileToDataUrl(file, maxSize = 1400, quality = 0.8) {
   return new Promise((resolve, reject) => {
     if (!file) {
@@ -188,6 +190,7 @@ const initialTicket = {
   customerName: "",
   fatherHusbandName: "",
   fullAddress: "",
+  phoneNumber: "",
 
   principalAmount: "",
   amountInWords: "",
@@ -195,7 +198,7 @@ const initialTicket = {
   redemptionTime: "1 Year",
 
   particulars: "",
-  customerId: "",
+  aadharCardNumber: "",
   annualIncome: "",
 
   grossKg: "",
@@ -250,6 +253,26 @@ function PawnTicketForm({ loanData = {} }) {
   }));
 
   /* =======================================================
+     KEEP CALCULATOR VALUES IN SYNC WITH PAWN TICKET
+     Values are auto-filled from the calculator, but remain editable.
+  ======================================================= */
+
+  useEffect(() => {
+    setTicket((current) => ({
+      ...current,
+      grossG: calculatorGoldWeight,
+      principalAmount:
+        calculatedLoanAmount > 0
+          ? String(calculatedLoanAmount)
+          : "",
+      amountInWords:
+        calculatedLoanAmount > 0
+          ? numberToWords(calculatedLoanAmount)
+          : "",
+    }));
+  }, [calculatorGoldWeight, calculatedLoanAmount]);
+
+  /* =======================================================
      SAVE STATE
   ======================================================= */
 
@@ -282,6 +305,18 @@ function PawnTicketForm({ loanData = {} }) {
   const [savedTicketId, setSavedTicketId] = useState("");
 
   /* =======================================================
+     CUSTOMER HISTORY SEARCH
+     The Aadhar Card section can search by:
+     1. Aadhar Card Number
+     2. Phone Number
+     3. Customer Name
+  ======================================================= */
+
+  const [customerSearchValue, setCustomerSearchValue] = useState("");
+
+  const [customerSearchType, setCustomerSearchType] = useState("");
+
+  /* =======================================================
      UPDATE TICKET
   ======================================================= */
 
@@ -291,16 +326,18 @@ function PawnTicketForm({ loanData = {} }) {
       [field]: value,
     }));
 
-    if (field === "customerId") {
-      const customerId = value.trim();
+    if (field === "aadharCardNumber") {
+      const aadharCardNumber = value.trim();
 
+      setCustomerSearchValue(value);
+      setCustomerSearchType("");
       setCustomerHistory([]);
       setHistoryMessage("");
       setPaymentMessage("");
       setShowHistory(false);
       setIsNewCustomer(false);
 
-      if (!customerId) {
+      if (!aadharCardNumber) {
         setShowHistory(false);
       }
     }
@@ -309,6 +346,7 @@ function PawnTicketForm({ loanData = {} }) {
   /* =======================================================
      PERSON + JEWELLERY PHOTO UPLOAD
   ======================================================= */
+
   const handleImageChange = async (field, file) => {
     if (!file) return;
 
@@ -323,6 +361,7 @@ function PawnTicketForm({ loanData = {} }) {
       }));
     } catch (error) {
       console.error("IMAGE PROCESSING ERROR:", error);
+
       setMessage(
         error.message || "Unable to process the selected image."
       );
@@ -334,13 +373,18 @@ function PawnTicketForm({ loanData = {} }) {
   ======================================================= */
 
   const searchCustomerHistory = async () => {
-    const customerId = ticket.customerId.trim();
+    const searchValue = customerSearchValue.trim();
 
-    if (!customerId) {
-      setHistoryMessage("Please enter Customer ID first.");
+    if (!searchValue) {
+      setHistoryMessage(
+        "Please enter Aadhar Card Number, Phone Number, or Customer Name first."
+      );
+
       setCustomerHistory([]);
       setShowHistory(true);
       setIsNewCustomer(false);
+      setCustomerSearchType("");
+
       return;
     }
 
@@ -353,14 +397,17 @@ function PawnTicketForm({ loanData = {} }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/customer/${encodeURIComponent(customerId)}`
+        `${API_URL}/customer/${encodeURIComponent(
+          searchValue
+        )}`
       );
 
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Unable to find customer history."
+          result.message ||
+            "Unable to find customer history."
         );
       }
 
@@ -371,30 +418,123 @@ function PawnTicketForm({ loanData = {} }) {
       setCustomerHistory(loans);
       setShowHistory(true);
 
+      /* ---------------------------------------------------
+         DETECT WHAT THE USER SEARCHED FOR
+      --------------------------------------------------- */
+
+      const digitsOnly = searchValue.replace(/\D/g, "");
+
+      let detectedType = "Customer Name";
+
+      if (digitsOnly.length === 12 && digitsOnly === searchValue.replace(/\D/g, "")) {
+        detectedType = "Aadhar Card Number";
+      } else if (digitsOnly.length === 10) {
+        detectedType = "Phone Number";
+      }
+
+      setCustomerSearchType(detectedType);
+
       if (result.isNewCustomer || loans.length === 0) {
         setIsNewCustomer(true);
 
         setHistoryMessage(
-          "New customer. No previous loans found."
+          `No previous loans found for this ${detectedType.toLowerCase()}.`
         );
       } else {
         setIsNewCustomer(false);
 
+        /* -------------------------------------------------
+           EXISTING CUSTOMER DETAILS
+
+           When the user searches by Aadhar, phone number,
+           OR CUSTOMER NAME (for example: "Siri"), use the
+           first matching previous loan to fill the customer
+           details in the current pawn ticket.
+
+           This means:
+           Search box -> Siri
+           -> previous Siri loans are displayed
+           -> Name / Father's-Husband's Name / Phone /
+              Address / Aadhar are filled from the old record.
+        ------------------------------------------------- */
+
+        const matchedLoan = loans[0] || {};
+
+        const matchedCustomerId = String(
+          matchedLoan.customerId ||
+            matchedLoan.aadharCardNumber ||
+            ""
+        ).trim();
+
+        const matchedCustomerName = String(
+          matchedLoan.customerName ||
+            matchedLoan.name ||
+            ""
+        ).trim();
+
+        const matchedFatherHusbandName = String(
+          matchedLoan.fatherHusbandName ||
+            matchedLoan.fatherName ||
+            matchedLoan.husbandName ||
+            ""
+        ).trim();
+
+        const matchedPhoneNumber = String(
+          matchedLoan.phoneNumber ||
+            matchedLoan.mobileNumber ||
+            matchedLoan.mobile ||
+            matchedLoan.phone ||
+            ""
+        ).replace(/\D/g, "").trim();
+
+        const matchedAddress = String(
+          matchedLoan.fullAddress ||
+            matchedLoan.address ||
+            ""
+        ).trim();
+
+        setTicket((current) => ({
+          ...current,
+
+          customerName:
+            matchedCustomerName || current.customerName,
+
+          fatherHusbandName:
+            matchedFatherHusbandName ||
+            current.fatherHusbandName,
+
+          phoneNumber:
+            matchedPhoneNumber || current.phoneNumber,
+
+          fullAddress:
+            matchedAddress || current.fullAddress,
+
+          aadharCardNumber:
+            matchedCustomerId || current.aadharCardNumber,
+        }));
+
         setHistoryMessage(
-          `Existing customer. ${loans.length} previous loan${
+          `Existing customer: ${
+            matchedCustomerName || searchValue
+          }. ${loans.length} previous loan${
             loans.length === 1 ? "" : "s"
-          } found.`
+          } found using ${detectedType}.`
         );
       }
     } catch (error) {
-      console.error("CUSTOMER HISTORY ERROR:", error);
+      console.error(
+        "CUSTOMER HISTORY ERROR:",
+        error
+      );
 
       setCustomerHistory([]);
       setShowHistory(true);
       setIsNewCustomer(false);
+      setCustomerSearchType("");
 
       setHistoryMessage(
-        "Customer history could not be loaded. Please try again."
+        error.message ||
+          "Customer history could not be loaded. Please try again."
       );
     } finally {
       setHistoryLoading(false);
@@ -403,14 +543,17 @@ function PawnTicketForm({ loanData = {} }) {
 
   /* =======================================================
      MARK LOAN AS PAID
-     
+
      IMPORTANT:
      THIS FUNCTION IS DECLARED ONLY ONCE.
   ======================================================= */
 
   const markLoanAsPaid = async (loan) => {
     if (!loan || !loan.id) {
-      setPaymentMessage("Unable to identify this loan.");
+      setPaymentMessage(
+        "Unable to identify this loan."
+      );
+
       return;
     }
 
@@ -419,7 +562,10 @@ function PawnTicketForm({ loanData = {} }) {
     ).toUpperCase();
 
     if (currentStatus === "PAID") {
-      setPaymentMessage("This loan is already marked as paid.");
+      setPaymentMessage(
+        "This loan is already marked as paid."
+      );
+
       return;
     }
 
@@ -436,12 +582,16 @@ function PawnTicketForm({ loanData = {} }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/${encodeURIComponent(loan.id)}/paid`,
+        `${API_URL}/${encodeURIComponent(
+          loan.id
+        )}/paid`,
         {
           method: "PATCH",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             paymentStatus: "PAID",
           }),
@@ -453,12 +603,16 @@ function PawnTicketForm({ loanData = {} }) {
       try {
         result = await response.json();
       } catch (jsonError) {
-        console.warn("Payment response was not JSON:", jsonError);
+        console.warn(
+          "Payment response was not JSON:",
+          jsonError
+        );
       }
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Unable to mark loan as paid."
+          result.message ||
+            "Unable to mark loan as paid."
         );
       }
 
@@ -483,10 +637,14 @@ function PawnTicketForm({ loanData = {} }) {
         `Loan ${loan.id} has been successfully marked as PAID.`
       );
     } catch (error) {
-      console.error("MARK LOAN AS PAID ERROR:", error);
+      console.error(
+        "MARK LOAN AS PAID ERROR:",
+        error
+      );
 
       setPaymentMessage(
-        error.message || "Unable to mark loan as paid."
+        error.message ||
+          "Unable to mark loan as paid."
       );
     } finally {
       setMarkingPaidId("");
@@ -504,70 +662,154 @@ function PawnTicketForm({ loanData = {} }) {
       setMessage(
         "Please accept the declaration before saving the application."
       );
+
       return;
     }
 
-    if (calculatedLoanAmount <= 0) {
+    const editablePrincipalAmount =
+      Number(
+        String(
+          ticket.principalAmount || ""
+        ).replace(/,/g, "")
+      ) || 0;
+
+    if (editablePrincipalAmount <= 0) {
       setMessage(
-        "Please enter gold weight and gold price in the Gold Loan Calculator."
+        "Please enter a valid Principal Amount."
       );
+
       return;
     }
 
-    if (!ticket.customerId.trim()) {
-      setMessage("Please enter Customer ID before saving.");
+    if (!String(ticket.grossG || "").trim()) {
+      setMessage(
+        "Please enter a valid Gold Weight in G."
+      );
+
+      return;
+    }
+
+    if (!ticket.aadharCardNumber.trim()) {
+      setMessage(
+        "Please enter Aadhar Card Number before saving. You can search the customer above using Aadhar, phone number, or name."
+      );
+
       return;
     }
 
     setSaving(true);
 
+    /* =====================================================
+       COMPLETE APPLICATION
+
+       PHONE NUMBER:
+       Explicitly sends phoneNumber to backend.
+
+       LOAN MONTH:
+       Explicitly sends the selected redemptionTime
+       as loanMonth to backend.
+    ===================================================== */
+
     const completeApplication = {
       ...loanData,
       ...ticket,
 
-      customerId: ticket.customerId.trim(),
+      aadharCardNumber:
+        ticket.aadharCardNumber.trim(),
 
-      goldWeight: calculatorGoldWeight,
+      customerId:
+        ticket.aadharCardNumber.trim(),
 
-      grossG: calculatorGoldWeight,
+      /* ===================================================
+         PHONE NUMBER
+      =================================================== */
 
-      principalAmount: calculatedLoanAmount,
+      phoneNumber: String(
+        ticket.phoneNumber ||
+          ticket.mobileNumber ||
+          ticket.mobile ||
+          ticket.phone ||
+          ""
+      )
+        .replace(/\D/g, "")
+        .trim(),
 
-      loanAmount: calculatedLoanAmount,
+      /* ===================================================
+         LOAN MONTH
+         Backend saves this in AE column.
+      =================================================== */
 
-      amountInWords: numberToWords(calculatedLoanAmount),
+      loanMonth: String(
+        ticket.loanMonth ||
+          ticket.redemptionTime ||
+          ticket.month ||
+          ""
+      ).trim(),
 
-      declarationAccepted: true,
+      goldWeight:
+        ticket.grossG,
 
-      paymentStatus: "ACTIVE",
+      grossG:
+        ticket.grossG,
 
-      paidAt: null,
+      principalAmount:
+        editablePrincipalAmount,
 
-      createdAt: new Date().toISOString(),
+      loanAmount:
+        editablePrincipalAmount,
+
+      amountInWords:
+        ticket.amountInWords ||
+        numberToWords(
+          editablePrincipalAmount
+        ),
+
+      declarationAccepted:
+        true,
+
+      paymentStatus:
+        "ACTIVE",
+
+      paidAt:
+        null,
+
+      createdAt:
+        new Date().toISOString(),
     };
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const response = await fetch(
+        API_URL,
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-        body: JSON.stringify(completeApplication),
-      });
+          body: JSON.stringify(
+            completeApplication
+          ),
+        }
+      );
 
       let result = {};
 
       try {
-        result = await response.json();
+        result =
+          await response.json();
       } catch (jsonError) {
-        console.warn("Save response was not JSON:", jsonError);
+        console.warn(
+          "Save response was not JSON:",
+          jsonError
+        );
       }
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Unable to save application."
+          result.message ||
+            "Unable to save application."
         );
       }
 
@@ -576,16 +818,21 @@ function PawnTicketForm({ loanData = {} }) {
         result.ticket?.id ||
         "";
 
-      setSavedTicketId(newTicketId);
+      setSavedTicketId(
+        newTicketId
+      );
 
       if (
         newTicketId &&
         !ticket.ticketNumber.trim()
       ) {
-        setTicket((current) => ({
-          ...current,
-          ticketNumber: newTicketId,
-        }));
+        setTicket(
+          (current) => ({
+            ...current,
+            ticketNumber:
+              newTicketId,
+          })
+        );
       }
 
       setMessage(
@@ -594,54 +841,77 @@ function PawnTicketForm({ loanData = {} }) {
         }`
       );
 
-      /* =====================================================
+      /* ===================================================
          REFRESH CUSTOMER HISTORY
-      ===================================================== */
+      =================================================== */
 
       try {
-        const customerId = ticket.customerId.trim();
+        const aadharCardNumber =
+          ticket.aadharCardNumber.trim();
 
-        const historyResponse = await fetch(
-          `${API_URL}/customer/${encodeURIComponent(customerId)}`
-        );
+        const historyResponse =
+          await fetch(
+            `${API_URL}/customer/${encodeURIComponent(
+              aadharCardNumber
+            )}`
+          );
 
-        if (historyResponse.ok) {
+        if (
+          historyResponse.ok
+        ) {
           const historyResult =
             await historyResponse.json();
 
-          const loans = Array.isArray(
-            historyResult.tickets
-          )
-            ? historyResult.tickets
-            : [];
+          const loans =
+            Array.isArray(
+              historyResult.tickets
+            )
+              ? historyResult.tickets
+              : [];
 
-          setCustomerHistory(loans);
-          setShowHistory(true);
-          setIsNewCustomer(false);
+          setCustomerHistory(
+            loans
+          );
+
+          setShowHistory(
+            true
+          );
+
+          setIsNewCustomer(
+            false
+          );
 
           setHistoryMessage(
-            `Application saved. Total loans for this Customer ID: ${loans.length}`
+            `Application saved. Total loans for this Aadhar Card Number: ${loans.length}`
           );
         }
-      } catch (historyError) {
+      } catch (
+        historyError
+      ) {
         console.warn(
           "History refresh failed after successful save:",
           historyError
         );
       }
     } catch (error) {
-      console.error("SAVE ERROR:", error);
+      console.error(
+        "SAVE ERROR:",
+        error
+      );
 
       if (
-        error instanceof TypeError &&
-        error.message === "Failed to fetch"
+        error instanceof
+          TypeError &&
+        error.message ===
+          "Failed to fetch"
       ) {
         setMessage(
           "Unable to connect to backend. Please make sure server.js is running on port 5000."
         );
       } else {
         setMessage(
-          error.message || "Unable to save application."
+          error.message ||
+            "Unable to save application."
         );
       }
     } finally {
@@ -656,45 +926,61 @@ function PawnTicketForm({ loanData = {} }) {
   const handlePrint = () => {
     setMessage("");
 
-    if (!ticket.declarationAccepted) {
+    if (
+      !ticket.declarationAccepted
+    ) {
       setMessage(
         "Please accept the declaration before printing the pawn ticket."
       );
+
       return;
     }
 
     try {
       const ticketElement =
-        document.getElementById("pawn-ticket");
+        document.getElementById(
+          "pawn-ticket"
+        );
 
       if (!ticketElement) {
-        setMessage("Pawn ticket section not found.");
+        setMessage(
+          "Pawn ticket section not found."
+        );
+
         return;
       }
 
-      const printWindow = window.open(
-        "",
-        "_blank",
-        "width=1000,height=900,left=50,top=50"
-      );
+      const printWindow =
+        window.open(
+          "",
+          "_blank",
+          "width=1000,height=900,left=50,top=50"
+        );
 
       if (!printWindow) {
         setMessage(
           "Print window was blocked by your browser. Please allow pop-ups for this website and try again."
         );
+
         return;
       }
 
-      const styles = Array.from(
-        document.querySelectorAll(
-          'link[rel="stylesheet"], style'
+      const styles =
+        Array.from(
+          document.querySelectorAll(
+            'link[rel="stylesheet"], style'
+          )
         )
-      )
-        .map((style) => style.outerHTML)
-        .join("\n");
+          .map(
+            (style) =>
+              style.outerHTML
+          )
+          .join("\n");
 
       const ticketClone =
-        ticketElement.cloneNode(true);
+        ticketElement.cloneNode(
+          true
+        );
 
       const originalInputs =
         ticketElement.querySelectorAll(
@@ -708,19 +994,30 @@ function PawnTicketForm({ loanData = {} }) {
 
       originalInputs.forEach(
         (original, index) => {
-          const clone = clonedInputs[index];
+          const clone =
+            clonedInputs[index];
 
           if (!clone) {
             return;
           }
 
-          if (original.tagName === "INPUT") {
-            const type = original.type;
+          if (
+            original.tagName ===
+            "INPUT"
+          ) {
+            const type =
+              original.type;
 
-            if (type === "checkbox") {
-              clone.checked = original.checked;
+            if (
+              type ===
+              "checkbox"
+            ) {
+              clone.checked =
+                original.checked;
 
-              if (original.checked) {
+              if (
+                original.checked
+              ) {
                 clone.setAttribute(
                   "checked",
                   "checked"
@@ -731,7 +1028,8 @@ function PawnTicketForm({ loanData = {} }) {
                 );
               }
             } else {
-              clone.value = original.value;
+              clone.value =
+                original.value;
 
               clone.setAttribute(
                 "value",
@@ -740,56 +1038,86 @@ function PawnTicketForm({ loanData = {} }) {
             }
           }
 
-          if (original.tagName === "TEXTAREA") {
-            clone.value = original.value;
-            clone.textContent = original.value;
+          if (
+            original.tagName ===
+            "TEXTAREA"
+          ) {
+            clone.value =
+              original.value;
+
+            clone.textContent =
+              original.value;
           }
 
-          if (original.tagName === "SELECT") {
-            clone.value = original.value;
+          if (
+            original.tagName ===
+            "SELECT"
+          ) {
+            clone.value =
+              original.value;
 
             Array.from(
               clone.options
-            ).forEach((option) => {
-              option.removeAttribute("selected");
-
-              if (
-                option.value ===
-                original.value
-              ) {
-                option.setAttribute(
-                  "selected",
+            ).forEach(
+              (option) => {
+                option.removeAttribute(
                   "selected"
                 );
+
+                if (
+                  option.value ===
+                  original.value
+                ) {
+                  option.setAttribute(
+                    "selected",
+                    "selected"
+                  );
+                }
               }
-            });
+            );
           }
         }
       );
 
       ticketClone
-        .querySelectorAll(".ticket-actions")
-        .forEach((element) => {
-          element.remove();
-        });
+        .querySelectorAll(
+          ".ticket-actions"
+        )
+        .forEach(
+          (element) => {
+            element.remove();
+          }
+        );
 
       ticketClone
-        .querySelectorAll(".save-message")
-        .forEach((element) => {
-          element.remove();
-        });
+        .querySelectorAll(
+          ".save-message"
+        )
+        .forEach(
+          (element) => {
+            element.remove();
+          }
+        );
 
       ticketClone
-        .querySelectorAll(".customer-loan-history")
-        .forEach((element) => {
-          element.remove();
-        });
+        .querySelectorAll(
+          ".customer-loan-history"
+        )
+        .forEach(
+          (element) => {
+            element.remove();
+          }
+        );
 
       ticketClone
-        .querySelectorAll("button")
-        .forEach((element) => {
-          element.remove();
-        });
+        .querySelectorAll(
+          "button"
+        )
+        .forEach(
+          (element) => {
+            element.remove();
+          }
+        );
 
       printWindow.document.open();
 
@@ -953,12 +1281,15 @@ function PawnTicketForm({ loanData = {} }) {
 
           setTimeout(() => {
             printWindow.focus();
+
             printWindow.print();
 
             setTimeout(() => {
               try {
                 printWindow.close();
-              } catch (closeError) {
+              } catch (
+                closeError
+              ) {
                 console.warn(
                   "Print window could not be closed:",
                   closeError
@@ -966,7 +1297,9 @@ function PawnTicketForm({ loanData = {} }) {
               }
             }, 3000);
           }, 700);
-        } catch (printError) {
+        } catch (
+          printError
+        ) {
           console.error(
             "PRINT WINDOW ERROR:",
             printError
@@ -978,45 +1311,63 @@ function PawnTicketForm({ loanData = {} }) {
         }
       };
 
-      const images = printWindow.document.images;
+      const images =
+        printWindow.document.images;
 
-      if (images.length === 0) {
+      if (
+        images.length === 0
+      ) {
         startPrinting();
+
         return;
       }
 
-      let remainingImages = images.length;
+      let remainingImages =
+        images.length;
+
       let started = false;
 
-      const finishImageLoading = () => {
-        remainingImages--;
+      const finishImageLoading =
+        () => {
+          remainingImages--;
 
-        if (
-          remainingImages <= 0 &&
-          !started
-        ) {
-          started = true;
-          startPrinting();
-        }
-      };
+          if (
+            remainingImages <=
+              0 &&
+            !started
+          ) {
+            started = true;
 
-      Array.from(images).forEach((image) => {
-        if (image.complete) {
-          finishImageLoading();
-        } else {
-          image.onload = finishImageLoading;
-          image.onerror = finishImageLoading;
+            startPrinting();
+          }
+        };
+
+      Array.from(images).forEach(
+        (image) => {
+          if (image.complete) {
+            finishImageLoading();
+          } else {
+            image.onload =
+              finishImageLoading;
+
+            image.onerror =
+              finishImageLoading;
+          }
         }
-      });
+      );
 
       setTimeout(() => {
         if (!started) {
           started = true;
+
           startPrinting();
         }
       }, 3000);
     } catch (error) {
-      console.error("PRINT ERROR:", error);
+      console.error(
+        "PRINT ERROR:",
+        error
+      );
 
       setMessage(
         "Unable to print the pawn ticket. Please try again."
@@ -1028,10 +1379,14 @@ function PawnTicketForm({ loanData = {} }) {
      FORMAT CURRENCY
   ======================================================= */
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (
+    amount
+  ) => {
     return `₹${Math.round(
       Number(amount) || 0
-    ).toLocaleString("en-IN")}`;
+    ).toLocaleString(
+      "en-IN"
+    )}`;
   };
 
   /* =======================================================
@@ -1050,6 +1405,7 @@ function PawnTicketForm({ loanData = {} }) {
             Keeps both logos inside the ticket on iPhone/Android.
             Desktop layout is unchanged.
         ================================================= */}
+
         <style>{`
           @media (max-width: 768px) {
             .pawn-ticket-container {
@@ -1143,18 +1499,31 @@ function PawnTicketForm({ loanData = {} }) {
 
           <div className="ticket-heading-content">
 
-            <span>Sri Balaji</span>
+            <span>
+              Sri Balaji
+            </span>
 
-            <span>PAWN TICKET</span>
+            <span>
+              PAWN TICKET
+            </span>
 
-            <h2>MAHAVEER</h2>
+            <h2>
+              MAHAVEER
+            </h2>
 
-            <p>PAWN BROKER</p>
-            <span>Estd. 2004</span>
+            <p>
+              PAWN BROKER
+            </p>
+
+            <span>
+              Estd. 2004
+            </span>
 
             <p className="pawn-shop-address">
               18-4-126A, Railway Colony Ext.<br />
               TIRUPATI- 517501<br />
+              Sri Dadhimataji Namaha<br />
+              P.B.L. NO. 705/TPT(U)/04<br />
               94404 82058
             </p>
 
@@ -1190,7 +1559,9 @@ function PawnTicketForm({ loanData = {} }) {
               id="ticketNumber"
               type="text"
               placeholder="Enter ticket number"
-              value={ticket.ticketNumber}
+              value={
+                ticket.ticketNumber
+              }
               onChange={(event) =>
                 updateTicket(
                   "ticketNumber",
@@ -1210,7 +1581,9 @@ function PawnTicketForm({ loanData = {} }) {
             <input
               id="ticketDate"
               type="date"
-              value={ticket.ticketDate}
+              value={
+                ticket.ticketDate
+              }
               onChange={(event) =>
                 updateTicket(
                   "ticketDate",
@@ -1239,7 +1612,9 @@ function PawnTicketForm({ loanData = {} }) {
               id="customerName"
               type="text"
               placeholder="Enter customer name"
-              value={ticket.customerName}
+              value={
+                ticket.customerName
+              }
               onChange={(event) =>
                 updateTicket(
                   "customerName",
@@ -1260,7 +1635,9 @@ function PawnTicketForm({ loanData = {} }) {
               id="fatherHusbandName"
               type="text"
               placeholder="Enter father's / husband's name"
-              value={ticket.fatherHusbandName}
+              value={
+                ticket.fatherHusbandName
+              }
               onChange={(event) =>
                 updateTicket(
                   "fatherHusbandName",
@@ -1271,17 +1648,43 @@ function PawnTicketForm({ loanData = {} }) {
 
           </div>
 
+          <div className="ticket-field">
+
+            <label htmlFor="phoneNumber">
+              Phone Number
+            </label>
+
+            <input
+              id="phoneNumber"
+              type="tel"
+              inputMode="numeric"
+              placeholder="Enter phone number"
+              value={
+                ticket.phoneNumber
+              }
+              onChange={(event) =>
+                updateTicket(
+                  "phoneNumber",
+                  event.target.value
+                )
+              }
+            />
+
+          </div>
+
           <div className="ticket-field full-width">
 
             <label htmlFor="fullAddress">
-              Full Address with Phone Number
+              Full Address
             </label>
 
             <textarea
               id="fullAddress"
               rows="3"
               placeholder="Enter complete address"
-              value={ticket.fullAddress}
+              value={
+                ticket.fullAddress
+              }
               onChange={(event) =>
                 updateTicket(
                   "fullAddress",
@@ -1300,19 +1703,44 @@ function PawnTicketForm({ loanData = {} }) {
 
             <div className="ticket-input-prefix">
 
-              <span>₹</span>
+              <span>
+                ₹
+              </span>
 
               <input
                 id="principalAmount"
                 type="text"
                 value={
-                  calculatedLoanAmount > 0
-                    ? calculatedLoanAmount.toLocaleString(
-                        "en-IN"
-                      )
-                    : ""
+                  ticket.principalAmount
                 }
-                readOnly
+                onChange={(event) => {
+                  const value =
+                    event.target.value;
+
+                  updateTicket(
+                    "principalAmount",
+                    value
+                  );
+
+                  const numericValue =
+                    Number(
+                      value.replace(
+                        /,/g,
+                        ""
+                      )
+                    );
+
+                  updateTicket(
+                    "amountInWords",
+                    value.trim() &&
+                      numericValue >
+                        0
+                      ? numberToWords(
+                          numericValue
+                        )
+                      : ""
+                  );
+                }}
               />
 
             </div>
@@ -1329,11 +1757,7 @@ function PawnTicketForm({ loanData = {} }) {
               id="amountInWords"
               type="text"
               value={
-                calculatedLoanAmount > 0
-                  ? numberToWords(
-                      calculatedLoanAmount
-                    )
-                  : ""
+                ticket.amountInWords
               }
               readOnly
             />
@@ -1348,7 +1772,9 @@ function PawnTicketForm({ loanData = {} }) {
 
             <select
               id="redemptionTime"
-              value={ticket.redemptionTime}
+              value={
+                ticket.redemptionTime
+              }
               onChange={(event) =>
                 updateTicket(
                   "redemptionTime",
@@ -1387,29 +1813,46 @@ function PawnTicketForm({ loanData = {} }) {
 
           <div className="ticket-field">
 
-            <label htmlFor="customerId">
-              Customer ID
+            <label htmlFor="aadharCardNumber">
+              Search Customer by Aadhar / Phone / Customer Name
             </label>
 
             <div
               style={{
-                display: "flex",
-                gap: "8px",
-                width: "100%",
+                display:
+                  "flex",
+                gap:
+                  "8px",
+                width:
+                  "100%",
               }}
             >
 
               <input
-                id="customerId"
+                id="aadharCardNumber"
                 type="text"
-                placeholder="Enter customer ID"
-                value={ticket.customerId}
-                onChange={(event) =>
-                  updateTicket(
-                    "customerId",
-                    event.target.value
-                  )
+                placeholder="Enter Aadhar Number, Phone Number or Customer Name (e.g. Siri)"
+                value={
+                  customerSearchValue
                 }
+                onChange={(event) => {
+                  const value = event.target.value;
+
+                  setCustomerSearchValue(value);
+                  setCustomerSearchType("");
+
+                  setCustomerHistory([]);
+                  setHistoryMessage("");
+                  setPaymentMessage("");
+                  setShowHistory(false);
+                  setIsNewCustomer(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    searchCustomerHistory();
+                  }
+                }}
                 style={{
                   flex: 1,
                 }}
@@ -1417,18 +1860,26 @@ function PawnTicketForm({ loanData = {} }) {
 
               <button
                 type="button"
-                onClick={searchCustomerHistory}
-                disabled={historyLoading}
+                onClick={
+                  searchCustomerHistory
+                }
+                disabled={
+                  historyLoading
+                }
                 style={{
-                  padding: "0 16px",
-                  cursor: historyLoading
-                    ? "not-allowed"
-                    : "pointer",
+                  padding:
+                    "0 16px",
+                  cursor:
+                    historyLoading
+                      ? "not-allowed"
+                      : "pointer",
                 }}
               >
-                {historyLoading
-                  ? "SEARCHING..."
-                  : "SEARCH"}
+                {
+                  historyLoading
+                    ? "SEARCHING..."
+                    : "SEARCH"
+                }
               </button>
 
             </div>
@@ -1449,7 +1900,9 @@ function PawnTicketForm({ loanData = {} }) {
               id="particulars"
               rows="4"
               placeholder="Enter details of gold ornaments"
-              value={ticket.particulars}
+              value={
+                ticket.particulars
+              }
               onChange={(event) =>
                 updateTicket(
                   "particulars",
@@ -1465,14 +1918,19 @@ function PawnTicketForm({ loanData = {} }) {
         {/* =================================================
             CUSTOMER + JEWELLERY PHOTOS
         ================================================= */}
+
         <div
           className="ticket-fields"
           style={{
-            marginTop: "25px",
-            gridTemplateColumns: "1fr 1fr",
+            marginTop:
+              "25px",
+            gridTemplateColumns:
+              "1fr 1fr",
           }}
         >
+
           <div className="ticket-field">
+
             <label htmlFor="personPhoto">
               Customer Photo
             </label>
@@ -1492,30 +1950,47 @@ function PawnTicketForm({ loanData = {} }) {
             {ticket.personPhoto && (
               <div
                 style={{
-                  marginTop: "10px",
-                  width: "150px",
-                  height: "150px",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  background: "#f8f8f8",
+                  marginTop:
+                    "10px",
+                  width:
+                    "150px",
+                  height:
+                    "150px",
+                  border:
+                    "1px solid #ddd",
+                  borderRadius:
+                    "6px",
+                  overflow:
+                    "hidden",
+                  background:
+                    "#f8f8f8",
                 }}
               >
+
                 <img
-                  src={ticket.personPhoto}
+                  src={
+                    ticket.personPhoto
+                  }
                   alt="Customer preview"
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
+                    width:
+                      "100%",
+                    height:
+                      "100%",
+                    objectFit:
+                      "cover",
+                    display:
+                      "block",
                   }}
                 />
+
               </div>
             )}
+
           </div>
 
           <div className="ticket-field">
+
             <label htmlFor="jewelleryPhoto">
               Jewellery Photo
             </label>
@@ -1535,28 +2010,45 @@ function PawnTicketForm({ loanData = {} }) {
             {ticket.jewelleryPhoto && (
               <div
                 style={{
-                  marginTop: "10px",
-                  width: "150px",
-                  height: "150px",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  background: "#f8f8f8",
+                  marginTop:
+                    "10px",
+                  width:
+                    "150px",
+                  height:
+                    "150px",
+                  border:
+                    "1px solid #ddd",
+                  borderRadius:
+                    "6px",
+                  overflow:
+                    "hidden",
+                  background:
+                    "#f8f8f8",
                 }}
               >
+
                 <img
-                  src={ticket.jewelleryPhoto}
+                  src={
+                    ticket.jewelleryPhoto
+                  }
                   alt="Jewellery preview"
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
+                    width:
+                      "100%",
+                    height:
+                      "100%",
+                    objectFit:
+                      "cover",
+                    display:
+                      "block",
                   }}
                 />
+
               </div>
             )}
+
           </div>
+
         </div>
 
         {/* =================================================
@@ -1567,20 +2059,29 @@ function PawnTicketForm({ loanData = {} }) {
           <div
             className="customer-loan-history"
             style={{
-              marginTop: "25px",
-              padding: "20px",
-              border: "1px solid #d4af37",
-              borderRadius: "8px",
-              background: "#fffdf5",
+              marginTop:
+                "25px",
+              padding:
+                "20px",
+              border:
+                "1px solid #d4af37",
+              borderRadius:
+                "8px",
+              background:
+                "#fffdf5",
             }}
           >
 
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "15px",
+                display:
+                  "flex",
+                justifyContent:
+                  "space-between",
+                alignItems:
+                  "center",
+                marginBottom:
+                  "15px",
               }}
             >
 
@@ -1588,7 +2089,8 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <h3
                   style={{
-                    margin: "0 0 5px",
+                    margin:
+                      "0 0 5px",
                   }}
                 >
                   Customer Loan History
@@ -1596,28 +2098,38 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <div
                   style={{
-                    fontSize: "14px",
-                    color: "#666",
+                    fontSize:
+                      "14px",
+                    color:
+                      "#666",
                   }}
                 >
-                  Customer ID:{" "}
+                  Search:{" "}
                   <strong>
-                    {ticket.customerId}
+                    {customerSearchValue || ticket.aadharCardNumber}
                   </strong>
+                  {customerSearchType && (
+                    <span style={{ marginLeft: "8px" }}>
+                      ({customerSearchType})
+                    </span>
+                  )}
                 </div>
 
               </div>
 
               <div
                 style={{
-                  textAlign: "right",
+                  textAlign:
+                    "right",
                 }}
               >
 
                 <div
                   style={{
-                    fontSize: "13px",
-                    color: "#666",
+                    fontSize:
+                      "13px",
+                    color:
+                      "#666",
                   }}
                 >
                   Total Loans
@@ -1625,10 +2137,13 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <strong
                   style={{
-                    fontSize: "28px",
+                    fontSize:
+                      "28px",
                   }}
                 >
-                  {customerHistory.length}
+                  {
+                    customerHistory.length
+                  }
                 </strong>
 
               </div>
@@ -1640,21 +2155,29 @@ function PawnTicketForm({ loanData = {} }) {
             ================================================= */}
 
             {isNewCustomer &&
-              customerHistory.length === 0 && (
+              customerHistory.length ===
+                0 && (
                 <div
                   style={{
-                    padding: "14px",
-                    background: "#e8f5e9",
-                    borderRadius: "6px",
-                    fontWeight: "600",
+                    padding:
+                      "14px",
+                    background:
+                      "#e8f5e9",
+                    borderRadius:
+                      "6px",
+                    fontWeight:
+                      "600",
                   }}
                 >
+
                   🆕 NEW CUSTOMER
 
                   <div
                     style={{
-                      marginTop: "5px",
-                      fontWeight: "400",
+                      marginTop:
+                        "5px",
+                      fontWeight:
+                        "400",
                     }}
                   >
                     No previous loan records found.
@@ -1672,13 +2195,19 @@ function PawnTicketForm({ loanData = {} }) {
               !isNewCustomer && (
                 <div
                   style={{
-                    padding: "12px",
-                    marginBottom: "12px",
-                    background: "#fff3cd",
-                    borderRadius: "5px",
+                    padding:
+                      "12px",
+                    marginBottom:
+                      "12px",
+                    background:
+                      "#fff3cd",
+                    borderRadius:
+                      "5px",
                   }}
                 >
-                  {historyMessage}
+                  {
+                    historyMessage
+                  }
                 </div>
               )}
 
@@ -1689,25 +2218,35 @@ function PawnTicketForm({ loanData = {} }) {
             {paymentMessage && (
               <div
                 style={{
-                  padding: "12px",
-                  marginBottom: "12px",
+                  padding:
+                    "12px",
+                  marginBottom:
+                    "12px",
                   background:
-                    paymentMessage.toLowerCase().includes(
-                      "successfully"
-                    )
+                    paymentMessage
+                      .toLowerCase()
+                      .includes(
+                        "successfully"
+                      )
                       ? "#e8f5e9"
                       : "#fdecea",
                   color:
-                    paymentMessage.toLowerCase().includes(
-                      "successfully"
-                    )
+                    paymentMessage
+                      .toLowerCase()
+                      .includes(
+                        "successfully"
+                      )
                       ? "#176b3a"
                       : "#b42318",
-                  borderRadius: "5px",
-                  fontWeight: "600",
+                  borderRadius:
+                    "5px",
+                  fontWeight:
+                    "600",
                 }}
               >
-                {paymentMessage}
+                {
+                  paymentMessage
+                }
               </div>
             )}
 
@@ -1715,18 +2254,23 @@ function PawnTicketForm({ loanData = {} }) {
                 EXISTING CUSTOMER LOANS
             ================================================= */}
 
-            {customerHistory.length > 0 && (
+            {customerHistory.length >
+              0 && (
               <div
                 style={{
-                  overflowX: "auto",
+                  overflowX:
+                    "auto",
                 }}
               >
 
                 <table
                   style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    background: "#fff",
+                    width:
+                      "100%",
+                    borderCollapse:
+                      "collapse",
+                    background:
+                      "#fff",
                   }}
                 >
 
@@ -1734,22 +2278,35 @@ function PawnTicketForm({ loanData = {} }) {
 
                     <tr>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         #
                       </th>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         Date
                       </th>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         Ticket ID
                       </th>
 
                       <th
                         style={{
                           ...tableHeaderStyle,
-                          textAlign: "right",
+                          textAlign:
+                            "right",
                         }}
                       >
                         Loan Amount
@@ -1758,21 +2315,34 @@ function PawnTicketForm({ loanData = {} }) {
                       <th
                         style={{
                           ...tableHeaderStyle,
-                          textAlign: "right",
+                          textAlign:
+                            "right",
                         }}
                       >
                         Gold Weight
                       </th>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         Redemption
                       </th>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         Payment Status
                       </th>
 
-                      <th style={tableHeaderStyle}>
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
                         Action
                       </th>
 
@@ -1783,7 +2353,10 @@ function PawnTicketForm({ loanData = {} }) {
                   <tbody>
 
                     {customerHistory.map(
-                      (loan, index) => {
+                      (
+                        loan,
+                        index
+                      ) => {
 
                         const paymentStatus =
                           String(
@@ -1792,7 +2365,8 @@ function PawnTicketForm({ loanData = {} }) {
                           ).toUpperCase();
 
                         const isPaid =
-                          paymentStatus === "PAID";
+                          paymentStatus ===
+                          "PAID";
 
                         const isCurrentlyMarking =
                           markingPaidId ===
@@ -1811,7 +2385,10 @@ function PawnTicketForm({ loanData = {} }) {
                                 tableCellStyle
                               }
                             >
-                              {index + 1}
+                              {
+                                index +
+                                1
+                              }
                             </td>
 
                             <td
@@ -1819,28 +2396,33 @@ function PawnTicketForm({ loanData = {} }) {
                                 tableCellStyle
                               }
                             >
-                              {loan.ticketDate ||
-                              loan.createdAt
-                                ? new Date(
-                                    loan.ticketDate ||
-                                      loan.createdAt
-                                  ).toLocaleDateString(
-                                    "en-IN"
-                                  )
-                                : "-"}
+                              {
+                                loan.ticketDate ||
+                                loan.createdAt
+                                  ? new Date(
+                                      loan.ticketDate ||
+                                        loan.createdAt
+                                    ).toLocaleDateString(
+                                      "en-IN"
+                                    )
+                                  : "-"
+                              }
                             </td>
 
                             <td
                               style={{
                                 ...tableCellStyle,
-                                maxWidth: "190px",
+                                maxWidth:
+                                  "190px",
                                 wordBreak:
                                   "break-word",
                               }}
                             >
-                              {loan.id ||
+                              {
+                                loan.id ||
                                 loan.ticketNumber ||
-                                "-"}
+                                "-"
+                              }
                             </td>
 
                             <td
@@ -1852,10 +2434,12 @@ function PawnTicketForm({ loanData = {} }) {
                                   "600",
                               }}
                             >
-                              {formatCurrency(
-                                loan.loanAmount ||
-                                  loan.principalAmount
-                              )}
+                              {
+                                formatCurrency(
+                                  loan.loanAmount ||
+                                    loan.principalAmount
+                                )
+                              }
                             </td>
 
                             <td
@@ -1865,13 +2449,17 @@ function PawnTicketForm({ loanData = {} }) {
                                   "right",
                               }}
                             >
-                              {loan.goldWeight ||
+                              {
+                                loan.goldWeight ||
                                 loan.grossG ||
-                                "-"}{" "}
-                              {loan.goldWeight ||
-                              loan.grossG
-                                ? "g"
-                                : ""}
+                                "-"
+                              }{" "}
+                              {
+                                loan.goldWeight ||
+                                loan.grossG
+                                  ? "g"
+                                  : ""
+                              }
                             </td>
 
                             <td
@@ -1879,8 +2467,10 @@ function PawnTicketForm({ loanData = {} }) {
                                 tableCellStyle
                               }
                             >
-                              {loan.redemptionTime ||
-                                "-"}
+                              {
+                                loan.redemptionTime ||
+                                "-"
+                              }
                             </td>
 
                             {/* PAYMENT STATUS */}
@@ -1915,9 +2505,11 @@ function PawnTicketForm({ loanData = {} }) {
                                       : "#946200",
                                 }}
                               >
-                                {isPaid
-                                  ? "PAID"
-                                  : "ACTIVE"}
+                                {
+                                  isPaid
+                                    ? "PAID"
+                                    : "ACTIVE"
+                                }
                               </span>
 
                               {isPaid &&
@@ -1932,11 +2524,13 @@ function PawnTicketForm({ loanData = {} }) {
                                         "#666",
                                     }}
                                   >
-                                    {new Date(
-                                      loan.paidAt
-                                    ).toLocaleDateString(
-                                      "en-IN"
-                                    )}
+                                    {
+                                      new Date(
+                                        loan.paidAt
+                                      ).toLocaleDateString(
+                                        "en-IN"
+                                      )
+                                    }
                                   </div>
                                 )}
 
@@ -1997,9 +2591,11 @@ function PawnTicketForm({ loanData = {} }) {
                                         : "pointer",
                                   }}
                                 >
-                                  {isCurrentlyMarking
-                                    ? "UPDATING..."
-                                    : "MARK AS PAID"}
+                                  {
+                                    isCurrentlyMarking
+                                      ? "UPDATING..."
+                                      : "MARK AS PAID"
+                                  }
                                 </button>
                               )}
 
@@ -2034,13 +2630,17 @@ function PawnTicketForm({ loanData = {} }) {
 
             <div className="ticket-input-prefix">
 
-              <span>₹</span>
+              <span>
+                ₹
+              </span>
 
               <input
                 type="text"
                 inputMode="numeric"
                 placeholder="Enter annual income"
-                value={ticket.annualIncome}
+                value={
+                  ticket.annualIncome
+                }
                 onChange={(event) =>
                   updateTicket(
                     "annualIncome",
@@ -2065,13 +2665,21 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <span></span>
 
-                <span>Kg.</span>
+                <span>
+                  Kg.
+                </span>
 
-                <span>G.</span>
+                <span>
+                  G.
+                </span>
 
-                <span>M.G.</span>
+                <span>
+                  M.G.
+                </span>
 
-                <span>P.V.</span>
+                <span>
+                  P.V.
+                </span>
 
               </div>
 
@@ -2083,7 +2691,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.grossKg}
+                  value={
+                    ticket.grossKg
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "grossKg",
@@ -2094,13 +2704,22 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={calculatorGoldWeight}
-                  readOnly
+                  value={
+                    ticket.grossG
+                  }
+                  onChange={(event) =>
+                    updateTicket(
+                      "grossG",
+                      event.target.value
+                    )
+                  }
                 />
 
                 <input
                   type="text"
-                  value={ticket.grossMg}
+                  value={
+                    ticket.grossMg
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "grossMg",
@@ -2111,7 +2730,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.grossPv}
+                  value={
+                    ticket.grossPv
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "grossPv",
@@ -2130,7 +2751,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.netKg}
+                  value={
+                    ticket.netKg
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "netKg",
@@ -2141,7 +2764,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.netG}
+                  value={
+                    ticket.netG
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "netG",
@@ -2152,7 +2777,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.netMg}
+                  value={
+                    ticket.netMg
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "netMg",
@@ -2163,7 +2790,9 @@ function PawnTicketForm({ loanData = {} }) {
 
                 <input
                   type="text"
-                  value={ticket.netPv}
+                  value={
+                    ticket.netPv
+                  }
                   onChange={(event) =>
                     updateTicket(
                       "netPv",
@@ -2275,7 +2904,9 @@ function PawnTicketForm({ loanData = {} }) {
           <button
             type="button"
             className="save-button"
-            onClick={handleSave}
+            onClick={
+              handleSave
+            }
             disabled={
               saving ||
               !ticket.declarationAccepted
@@ -2289,7 +2920,9 @@ function PawnTicketForm({ loanData = {} }) {
           <button
             type="button"
             className="print-button"
-            onClick={handlePrint}
+            onClick={
+              handlePrint
+            }
             disabled={
               !ticket.declarationAccepted
             }

@@ -11,7 +11,7 @@ import { Readable } from "stream";
 if (process.env.VERCEL) {
   dotenv.config();
 } else {
-  dotenv.config({ path: "backend/.env" });
+  dotenv.config();
 }
 
 /* =========================================================
@@ -201,7 +201,7 @@ if (
 ========================================================= */
 
 const SHEET_RANGE =
-  `${GOOGLE_SHEET_NAME}!A:AB`;
+  `${GOOGLE_SHEET_NAME}!A:AE`;
 
 /* =========================================================
    SHEET HEADERS
@@ -236,6 +236,9 @@ const SHEET_HEADERS = [
   "savedAt",
   "personPhotoUrl",
   "jewelleryPhotoUrl",
+  "phoneNumber",
+  "",
+  "loanMonth",
 ];
 
 /* =========================================================
@@ -281,7 +284,7 @@ async function ensureSheetHeaders() {
         GOOGLE_SHEET_ID,
 
       range:
-        `${GOOGLE_SHEET_NAME}!A1:AB1`,
+        `${GOOGLE_SHEET_NAME}!A1:AE1`,
     });
 
   const firstRow =
@@ -293,7 +296,7 @@ async function ensureSheetHeaders() {
         GOOGLE_SHEET_ID,
 
       range:
-        `${GOOGLE_SHEET_NAME}!A1:AB1`,
+        `${GOOGLE_SHEET_NAME}!A1:AE1`,
 
       valueInputOption: "RAW",
 
@@ -307,26 +310,56 @@ async function ensureSheetHeaders() {
     return;
   }
 
+  /* -------------------------------------------------------
+     PHONE NUMBER HEADER - AC
+  ------------------------------------------------------- */
+
   if (
-    firstRow[26] !==
-      "personPhotoUrl" ||
-    firstRow[27] !==
-      "jewelleryPhotoUrl"
+    firstRow[28] !==
+    "phoneNumber"
   ) {
     await sheets.spreadsheets.values.update({
       spreadsheetId:
         GOOGLE_SHEET_ID,
 
       range:
-        `${GOOGLE_SHEET_NAME}!AA1:AB1`,
+        `${GOOGLE_SHEET_NAME}!AE1`,
 
       valueInputOption: "RAW",
 
       requestBody: {
         values: [
           [
-            "personPhotoUrl",
-            "jewelleryPhotoUrl",
+            "phoneNumber",
+          ],
+        ],
+      },
+    });
+  }
+
+  /* -------------------------------------------------------
+     LOAN MONTH HEADER - AE
+
+     AD IS LEFT UNTOUCHED
+  ------------------------------------------------------- */
+
+  if (
+    firstRow[30] !==
+    "loanMonth"
+  ) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId:
+        GOOGLE_SHEET_ID,
+
+      range:
+        `${GOOGLE_SHEET_NAME}!AE1`,
+
+      valueInputOption: "RAW",
+
+      requestBody: {
+        values: [
+          [
+            "loanMonth",
           ],
         ],
       },
@@ -450,6 +483,12 @@ function rowToTicket(row) {
 
     jewelleryPhotoUrl:
       row[27] || "",
+
+    phoneNumber:
+      String(row[28] || ""),
+
+    loanMonth:
+      String(row[30] || ""),
   };
 }
 
@@ -772,6 +811,102 @@ app.post(
         });
       }
 
+      /* -----------------------------------------------------
+         PHONE NUMBER
+         AC COLUMN
+      ----------------------------------------------------- */
+
+      const phoneNumber =
+        String(
+          ticket.phoneNumber ??
+            ticket.mobileNumber ??
+            ticket.mobile ??
+            ticket.phone ??
+            ""
+        )
+          .replace(/\D/g, "")
+          .trim();
+
+      /* -----------------------------------------------------
+         LOAN MONTH
+         AE COLUMN
+
+         IMPORTANT:
+         AE must contain the CALENDAR MONTH NAME only.
+         Example: September
+
+         It must NOT contain the redemption period
+         such as "1 Year", "6 Months", etc.
+      ----------------------------------------------------- */
+
+      function getLoanMonthName(dateValue) {
+        const value =
+          String(
+            dateValue || ""
+          ).trim();
+
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        /* Handle YYYY-MM-DD directly to avoid timezone issues. */
+        const isoMatch =
+          value.match(
+            /^(\d{4})-(\d{2})-(\d{2})/
+          );
+
+        if (isoMatch) {
+          const monthNumber =
+            Number(
+              isoMatch[2]
+            );
+
+          if (
+            monthNumber >= 1 &&
+            monthNumber <= 12
+          ) {
+            return monthNames[
+              monthNumber - 1
+            ];
+          }
+        }
+
+        const parsedDate =
+          new Date(value);
+
+        if (
+          !Number.isNaN(
+            parsedDate.getTime()
+          )
+        ) {
+          return monthNames[
+            parsedDate.getMonth()
+          ];
+        }
+
+        return monthNames[
+          new Date().getMonth()
+        ];
+      }
+
+      const loanMonth =
+        getLoanMonthName(
+          ticket.ticketDate ||
+            ticket.createdAt ||
+            new Date().toISOString()
+        );
+
       const loanAmount =
         Number(
           ticket.loanAmount ??
@@ -974,6 +1109,10 @@ app.post(
         personPhotoUrl,
 
         jewelleryPhotoUrl,
+
+        phoneNumber,
+
+        loanMonth,
       };
 
       /* -----------------------------------------------------
@@ -984,6 +1123,10 @@ app.post(
 
       /* -----------------------------------------------------
          SAVE TO SHEETS
+
+         AC = phoneNumber
+         AD = blank
+         AE = loanMonth
       ----------------------------------------------------- */
 
       await sheets.spreadsheets.values.append({
@@ -1030,6 +1173,19 @@ app.post(
               savedTicket.savedAt,
               savedTicket.personPhotoUrl,
               savedTicket.jewelleryPhotoUrl,
+
+              /* AC - PHONE NUMBER */
+              String(
+                savedTicket.phoneNumber || ""
+              ),
+
+              /* AD - KEEP EXISTING COLUMN UNTOUCHED */
+              "",
+
+              /* AE - LOAN MONTH */
+              String(
+                savedTicket.loanMonth || ""
+              ),
             ],
           ],
         },
@@ -1037,6 +1193,18 @@ app.post(
 
       console.log(
         `PAWN TICKET SAVED: ${id}`
+      );
+
+      console.log(
+        `PHONE NUMBER SAVED TO AC: ${String(
+          savedTicket.phoneNumber || ""
+        )}`
+      );
+
+      console.log(
+        `LOAN MONTH SAVED TO AE: ${String(
+          savedTicket.loanMonth || ""
+        )}`
       );
 
       return res.status(201).json({
@@ -1238,6 +1406,10 @@ app.patch(
 
 /* =========================================================
    CUSTOMER HISTORY
+   SEARCH BY:
+   1. AADHAR CARD NUMBER
+   2. MOBILE NUMBER
+   3. CUSTOMER NAME
 ========================================================= */
 
 app.get(
@@ -1250,17 +1422,17 @@ app.get(
         return;
       }
 
-      const customerId =
+      const searchValue =
         String(
           req.params.customerId ||
             ""
         ).trim();
 
-      if (!customerId) {
+      if (!searchValue) {
         return res.status(400).json({
           success: false,
           message:
-            "Customer ID is required.",
+            "Aadhar Card Number, mobile number, or customer name is required.",
         });
       }
 
@@ -1269,18 +1441,62 @@ app.get(
       const rows =
         await getSheetRows();
 
+      const normalizedSearch =
+        searchValue
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+
+      const normalizedDigits =
+        searchValue.replace(/\D/g, "");
+
       const customerTickets =
         rows
           .slice(1)
-          .filter(
-            (row) =>
+          .filter((row) => {
+            const aadhar =
               String(
                 row[1] || ""
               )
-                .trim()
-                .toLowerCase() ===
-              customerId.toLowerCase()
-          )
+                .toLowerCase()
+                .trim();
+
+            const customerName =
+              String(
+                row[2] || ""
+              )
+                .toLowerCase()
+                .replace(/\s+/g, " ")
+                .trim();
+
+            const phoneNumber =
+              String(
+                row[28] || ""
+              ).replace(/\D/g, "");
+
+            const normalizedAadhar =
+              aadhar.replace(/\D/g, "");
+
+            const aadharMatch =
+              normalizedDigits.length > 0 &&
+              normalizedAadhar ===
+                normalizedDigits;
+
+            const phoneMatch =
+              normalizedDigits.length > 0 &&
+              phoneNumber ===
+                normalizedDigits;
+
+            const nameMatch =
+              customerName ===
+              normalizedSearch;
+
+            return (
+              aadharMatch ||
+              phoneMatch ||
+              nameMatch
+            );
+          })
           .map(rowToTicket);
 
       if (
@@ -1292,7 +1508,8 @@ app.get(
           isNewCustomer:
             true,
 
-          customerId,
+          customerId:
+            searchValue,
 
           count: 0,
 
@@ -1309,7 +1526,8 @@ app.get(
         isNewCustomer:
           false,
 
-        customerId,
+        customerId:
+          searchValue,
 
         count:
           customerTickets.length,
@@ -1603,6 +1821,7 @@ if (!process.env.VERCEL) {
       console.log(
         "===================================="
       );
+
       console.log("");
     }
   );

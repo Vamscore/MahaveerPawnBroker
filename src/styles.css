@@ -1176,28 +1176,40 @@ img:not([style*="display: none"])
 
 .ticket-top-grid {
   display: grid;
-
   grid-template-columns: 1fr 1fr;
-
   gap: 20px;
-
   margin-bottom: 18px;
+  align-items: start;
 }
 
+.ticket-top-grid > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 80px;
+}
+
+/* Left Logo */
 .ticket-left-image {
-  width: 120px;
-  height: 120px;
-
+  width: 160px;
+  height: 160px;
   object-fit: contain;
+  display: block;
+  margin: 0;
+  position: relative;
+  top: -0px;
 }
 
+/* Right Logo */
 .ticket-god-image {
-  width: 120px;
-  height: 120px;
-
+  width: 160px;
+  height: 160px;
   object-fit: contain;
+  display: block;
+  margin: 0;
+  position: relative;
+  top: -10px;
 }
-
 /* =========================================================
    TICKET FIELDS
 ========================================================= */
