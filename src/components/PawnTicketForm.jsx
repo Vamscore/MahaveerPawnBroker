@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 const API_URL =
-  // "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
-      "http://localhost:5000/api/pawn-tickets";
+  "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
+      // "http://localhost:5000/api/pawn-tickets";
 
 /* =========================================================
    TODAY'S DATE
