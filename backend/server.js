@@ -4,19 +4,7 @@ import dotenv from "dotenv";
 import { google } from "googleapis";
 import { Readable } from "stream";
 
-/* =========================================================
-   ENVIRONMENT
-========================================================= */
-
-if (process.env.VERCEL) {
-  dotenv.config();
-} else {
-  dotenv.config();
-}
-
-/* =========================================================
-   APP
-========================================================= */
+dotenv.config();
 
 const app = express();
 
@@ -105,7 +93,6 @@ const OWNER_ACCOUNTS = [
 
 /* =========================================================
    GOOGLE SHEETS
-   SERVICE ACCOUNT
 ========================================================= */
 
 let sheets = null;
@@ -152,7 +139,6 @@ if (
 
 /* =========================================================
    GOOGLE DRIVE
-   OAUTH USER ACCOUNT
 ========================================================= */
 
 let drive = null;
@@ -201,46 +187,45 @@ if (
 ========================================================= */
 
 const SHEET_RANGE =
-  `${GOOGLE_SHEET_NAME}!A:AE`;
+  `${GOOGLE_SHEET_NAME}!A:AC`;
 
 /* =========================================================
-   SHEET HEADERS
+   CORRECT SHEET HEADERS
 ========================================================= */
 
 const SHEET_HEADERS = [
-  "Ticket Number",
-  "Aadhar Card Number",
-  "customerName",
-  "Father/HusbandName",
-  "Address",
-  "redemptionTime",
-  "particulars",
-  "annualIncome",
-  "goldWeight",
-  "loanTenure",
-  "goldPrice",
-  "interestRate",
-  "principalAmount",
-  "loanAmount",
-  "monthlyInterest",
-  "totalInterest",
-  "totalAmountToPay",
-  "amountInWords",
-  "",
-  "ticketNumber",
-  "ticketDate",
-  "declarationAccepted",
-  "paymentStatus",
-  "paidAt",
-  "createdAt",
-  "savedAt",
-  "personPhotoUrl",
-  "jewelleryPhotoUrl",
-  "phoneNumber",
-  "",
-  "loanMonth",
+  "ID",                    // A
+  "Aadhar Card Number",    // B
+  "customerName",          // C
+  "Father/HusbandName",    // D
+  "Address",               // E
+  "redemptionTime",        // F
+  "particulars",           // G
+  "annualIncome",          // H
+  "goldWeight",             // I
+  "loanTenure",             // J
+  "goldPrice",              // K
+  "interestRate",           // L
+  "principalAmount",        // M
+  "loanAmount",             // N
+  "monthlyInterest",        // O
+  "totalInterest",          // P
+  "totalAmountToPay",       // Q
+  "amountInWords",          // R
+  "totalAmountInWords",     // S
+  "ticketNumber",           // T
+  "ticketDate",             // U
+  "declarationAccepted",    // V
+  "paymentStatus",          // W
+  "paidAt",                 // X
+  "createdAt",              // Y
+  "savedAt",                // Z
+  "personPhotoUrl",         // AA
+  "jewelleryPhotoUrl",      // AB
+  "phoneNumber",            // AC
+  "",                       // AD
+  "loanMonth",              // AE
 ];
-
 /* =========================================================
    HELPERS
 ========================================================= */
@@ -268,6 +253,136 @@ function checkDriveConnection() {
 }
 
 /* =========================================================
+   NUMBER TO WORDS
+========================================================= */
+
+function numberToWords(number) {
+  const num = Math.floor(
+    Number(number) || 0
+  );
+
+  if (num === 0) {
+    return "Zero Rupees Only";
+  }
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  function convertLessThanThousand(n) {
+    let result = "";
+
+    if (n >= 100) {
+      result +=
+        ones[Math.floor(n / 100)] +
+        " Hundred";
+
+      n %= 100;
+
+      if (n > 0) {
+        result += " ";
+      }
+    }
+
+    if (n >= 20) {
+      result += tens[Math.floor(n / 10)];
+
+      n %= 10;
+
+      if (n > 0) {
+        result +=
+          " " + ones[n];
+      }
+    } else if (n > 0) {
+      result += ones[n];
+    }
+
+    return result;
+  }
+
+  let result = "";
+
+  const crore =
+    Math.floor(num / 10000000);
+
+  const lakh =
+    Math.floor(
+      (num % 10000000) / 100000
+    );
+
+  const thousand =
+    Math.floor(
+      (num % 100000) / 1000
+    );
+
+  const remainder =
+    num % 1000;
+
+  if (crore > 0) {
+    result +=
+      convertLessThanThousand(crore) +
+      " Crore";
+  }
+
+  if (lakh > 0) {
+    if (result) result += " ";
+
+    result +=
+      convertLessThanThousand(lakh) +
+      " Lakh";
+  }
+
+  if (thousand > 0) {
+    if (result) result += " ";
+
+    result +=
+      convertLessThanThousand(thousand) +
+      " Thousand";
+  }
+
+  if (remainder > 0) {
+    if (result) result += " ";
+
+    result +=
+      convertLessThanThousand(remainder);
+  }
+
+  return `${result} Rupees Only`;
+}
+
+/* =========================================================
    ENSURE SHEET HEADERS
 ========================================================= */
 
@@ -290,6 +405,11 @@ async function ensureSheetHeaders() {
   const firstRow =
     response.data.values?.[0] || [];
 
+  /*
+    If headers are completely missing,
+    create all headers.
+  */
+
   if (firstRow.length === 0) {
     await sheets.spreadsheets.values.update({
       spreadsheetId:
@@ -298,7 +418,8 @@ async function ensureSheetHeaders() {
       range:
         `${GOOGLE_SHEET_NAME}!A1:AE1`,
 
-      valueInputOption: "RAW",
+      valueInputOption:
+        "RAW",
 
       requestBody: {
         values: [
@@ -310,60 +431,69 @@ async function ensureSheetHeaders() {
     return;
   }
 
-  /* -------------------------------------------------------
-     PHONE NUMBER HEADER - AC
-  ------------------------------------------------------- */
+  /* =======================================================
+     FIX IMPORTANT COLUMNS
+  ======================================================= */
 
-  if (
-    firstRow[28] !==
-    "phoneNumber"
-  ) {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId:
-        GOOGLE_SHEET_ID,
+  const headerFixes = [
+  [0, "A1", "ID"],
+  [1, "B1", "Aadhar Card Number"],
+  [2, "C1", "customerName"],
+  [3, "D1", "Father/HusbandName"],
+  [4, "E1", "Address"],
+  [5, "F1", "redemptionTime"],
+  [6, "G1", "particulars"],
+  [7, "H1", "annualIncome"],
+  [8, "I1", "goldWeight"],
+  [9, "J1", "loanTenure"],
+  [10, "K1", "goldPrice"],
+  [11, "L1", "interestRate"],
+  [12, "M1", "principalAmount"],
+  [13, "N1", "loanAmount"],
+  [14, "O1", "monthlyInterest"],
+  [15, "P1", "totalInterest"],
+  [16, "Q1", "totalAmountToPay"],
+  [17, "R1", "amountInWords"],
+  [18, "S1", "totalAmountInWords"],
+  [19, "T1", "ticketNumber"],
+  [20, "U1", "ticketDate"],
+  [21, "V1", "declarationAccepted"],
+  [22, "W1", "paymentStatus"],
+  [23, "X1", "paidAt"],
+  [24, "Y1", "createdAt"],
+  [25, "Z1", "savedAt"],
+  [26, "AA1", "personPhotoUrl"],
+  [27, "AB1", "jewelleryPhotoUrl"],
+  [28, "AC1", "phoneNumber"],
+  [29, "AD1", ""],
+  [30, "AE1", "loanMonth"],
+];
+  for (const [
+    index,
+    cell,
+    expected,
+  ] of headerFixes) {
+    if (
+      firstRow[index] !==
+      expected
+    ) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId:
+          GOOGLE_SHEET_ID,
 
-      range:
-        `${GOOGLE_SHEET_NAME}!AE1`,
+        range:
+          `${GOOGLE_SHEET_NAME}!${cell}`,
 
-      valueInputOption: "RAW",
+        valueInputOption:
+          "RAW",
 
-      requestBody: {
-        values: [
-          [
-            "phoneNumber",
+        requestBody: {
+          values: [
+            [expected],
           ],
-        ],
-      },
-    });
-  }
-
-  /* -------------------------------------------------------
-     LOAN MONTH HEADER - AE
-
-     AD IS LEFT UNTOUCHED
-  ------------------------------------------------------- */
-
-  if (
-    firstRow[30] !==
-    "loanMonth"
-  ) {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId:
-        GOOGLE_SHEET_ID,
-
-      range:
-        `${GOOGLE_SHEET_NAME}!AE1`,
-
-      valueInputOption: "RAW",
-
-      requestBody: {
-        values: [
-          [
-            "loanMonth",
-          ],
-        ],
-      },
-    });
+        },
+      });
+    }
   }
 }
 
@@ -398,97 +528,66 @@ async function getSheetRows() {
 
 function rowToTicket(row) {
   return {
-    id:
-      row[0] || "",
+    id: row[0] || "",
 
-    customerId:
-      row[1] || "",
+    customerId: row[1] || "",
 
-    customerName:
-      row[2] || "",
+    customerName: row[2] || "",
 
-    fatherHusbandName:
-      row[3] || "",
+    fatherHusbandName: row[3] || "",
 
-    fullAddress:
-      row[4] || "",
+    fullAddress: row[4] || "",
 
-    redemptionTime:
-      row[5] || "",
+    redemptionTime: row[5] || "",
 
-    particulars:
-      row[6] || "",
+    particulars: row[6] || "",
 
-    annualIncome:
-      row[7] || "",
+    annualIncome: row[7] || "",
 
-    goldWeight:
-      row[8] || "",
+    goldWeight: row[8] || "",
 
-    loanTenure:
-      Number(row[9] || 0),
+    loanTenure: Number(row[9] || 0),
 
-    goldPrice:
-      row[10] || "",
+    goldPrice: row[10] || "",
 
-    interestRate:
-      Number(row[11] || 0),
+    interestRate: Number(row[11] || 0),
 
-    principalAmount:
-      Number(row[12] || 0),
+    principalAmount: Number(row[12] || 0),
 
-    loanAmount:
-      Number(row[13] || 0),
+    loanAmount: Number(row[13] || 0),
 
-    monthlyInterest:
-      Number(row[14] || 0),
+    monthlyInterest: Number(row[14] || 0),
 
-    totalInterest:
-      Number(row[15] || 0),
+    totalInterest: Number(row[15] || 0),
 
-    totalAmountToPay:
-      Number(row[16] || 0),
+    totalAmountToPay: Number(row[16] || 0),
 
-    amountInWords:
-      row[17] || "",
+    amountInWords: row[17] || "",
 
-    // totalAmountInWords:
-    //   row[18] || "",
+    totalAmountInWords: row[18] || "",
 
-    ticketNumber:
-      row[19] || "",
+    ticketNumber: row[19] || "",
 
-    ticketDate:
-      row[20] || "",
+    ticketDate: row[20] || "",
 
     declarationAccepted:
-      String(
-        row[21] || ""
-      ).toLowerCase() === "true",
+      String(row[21] || "").toLowerCase() === "true",
 
-    paymentStatus:
-      row[22] || "ACTIVE",
+    paymentStatus: row[22] || "ACTIVE",
 
-    paidAt:
-      row[23] || null,
+    paidAt: row[23] || null,
 
-    createdAt:
-      row[24] || "",
+    createdAt: row[24] || "",
 
-    savedAt:
-      row[25] || "",
+    savedAt: row[25] || "",
 
-    personPhotoUrl:
-      row[26] || "",
+    personPhotoUrl: row[26] || "",
 
-    jewelleryPhotoUrl:
-      row[27] || "",
+    jewelleryPhotoUrl: row[27] || "",
 
-    phoneNumber:
-      String(row[28] || ""),
+    phoneNumber: String(row[28] || ""),
 
-    loanMonth:
-      String(row[30] || ""),
+    loanMonth: String(row[30] || ""),
   };
 }
 
@@ -559,8 +658,9 @@ app.post(
       const owner =
         OWNER_ACCOUNTS.find(
           (account) =>
-            String(account.mobile)
-              .replace(/\D/g, "") ===
+            String(
+              account.mobile
+            ).replace(/\D/g, "") ===
             mobile
         );
 
@@ -593,7 +693,8 @@ app.post(
       }
 
       if (
-        pin !== String(owner.pin).trim()
+        pin !==
+        String(owner.pin).trim()
       ) {
         return res.status(401).json({
           success: false,
@@ -785,6 +886,10 @@ app.post(
         });
       }
 
+      /* =====================================================
+         AADHAR
+      ===================================================== */
+
       const customerId =
         String(
           ticket.customerId || ""
@@ -797,6 +902,10 @@ app.post(
             "Aadhar Card Number is required.",
         });
       }
+
+      /* =====================================================
+         CUSTOMER NAME
+      ===================================================== */
 
       const customerName =
         String(
@@ -811,10 +920,25 @@ app.post(
         });
       }
 
-      /* -----------------------------------------------------
-         PHONE NUMBER
-         AC COLUMN
-      ----------------------------------------------------- */
+      /* =====================================================
+         FATHER / HUSBAND NAME
+
+         Accept multiple frontend property names
+         so the value doesn't get lost.
+      ===================================================== */
+
+      const fatherHusbandName =
+        String(
+          ticket.fatherHusbandName ??
+            ticket.fatherName ??
+            ticket.husbandName ??
+            ticket.fatherOrHusbandName ??
+            ""
+        ).trim();
+
+      /* =====================================================
+         PHONE NUMBER -> AC
+      ===================================================== */
 
       const phoneNumber =
         String(
@@ -827,19 +951,13 @@ app.post(
           .replace(/\D/g, "")
           .trim();
 
-      /* -----------------------------------------------------
-         LOAN MONTH
-         AE COLUMN
+      /* =====================================================
+         LOAN MONTH -> AE
+      ===================================================== */
 
-         IMPORTANT:
-         AE must contain the CALENDAR MONTH NAME only.
-         Example: September
-
-         It must NOT contain the redemption period
-         such as "1 Year", "6 Months", etc.
-      ----------------------------------------------------- */
-
-      function getLoanMonthName(dateValue) {
+      function getLoanMonthName(
+        dateValue
+      ) {
         const value =
           String(
             dateValue || ""
@@ -860,7 +978,6 @@ app.post(
           "December",
         ];
 
-        /* Handle YYYY-MM-DD directly to avoid timezone issues. */
         const isoMatch =
           value.match(
             /^(\d{4})-(\d{2})-(\d{2})/
@@ -907,6 +1024,10 @@ app.post(
             new Date().toISOString()
         );
 
+      /* =====================================================
+         LOAN AMOUNT
+      ===================================================== */
+
       const loanAmount =
         Number(
           ticket.loanAmount ??
@@ -927,9 +1048,9 @@ app.post(
         });
       }
 
-      /* -----------------------------------------------------
+      /* =====================================================
          INTEREST
-      ----------------------------------------------------- */
+      ===================================================== */
 
       const interestRate =
         Number(
@@ -979,9 +1100,28 @@ app.post(
         loanAmount +
         totalInterest;
 
-      /* -----------------------------------------------------
+      /* =====================================================
+         AMOUNT IN WORDS
+      ===================================================== */
+
+      const amountInWords =
+        String(
+          ticket.amountInWords || ""
+        ).trim();
+
+      const totalAmountInWords =
+        String(
+          ticket.totalAmountInWords ||
+            ticket.totalAmountInWord ||
+            ""
+        ).trim() ||
+        numberToWords(
+          totalAmountToPay
+        );
+
+      /* =====================================================
          ID / DATES
-      ----------------------------------------------------- */
+      ===================================================== */
 
       const id =
         `MT-${Date.now()}-${Math.floor(
@@ -995,9 +1135,9 @@ app.post(
         ticket.createdAt ||
         savedAt;
 
-      /* -----------------------------------------------------
+      /* =====================================================
          PHOTOS
-      ----------------------------------------------------- */
+      ===================================================== */
 
       let personPhotoUrl = "";
 
@@ -1023,9 +1163,9 @@ app.post(
           );
       }
 
-      /* -----------------------------------------------------
+      /* =====================================================
          FINAL TICKET
-      ----------------------------------------------------- */
+      ===================================================== */
 
       const savedTicket = {
         id,
@@ -1034,12 +1174,11 @@ app.post(
 
         customerName,
 
-        fatherHusbandName:
-          ticket.fatherHusbandName ||
-          "",
+        fatherHusbandName,
 
         fullAddress:
-          ticket.fullAddress ||
+          ticket.fullAddress ??
+          ticket.address ??
           "",
 
         redemptionTime:
@@ -1077,13 +1216,9 @@ app.post(
 
         totalAmountToPay,
 
-        amountInWords:
-          ticket.amountInWords ||
-          "",
+        amountInWords,
 
-        // totalAmountInWords:
-        //   ticket.totalAmountInWords ||
-        //   "",
+        totalAmountInWords,
 
         ticketNumber:
           ticket.ticketNumber ||
@@ -1115,26 +1250,165 @@ app.post(
         loanMonth,
       };
 
-      /* -----------------------------------------------------
+      /* =====================================================
          HEADERS
-      ----------------------------------------------------- */
+      ===================================================== */
 
       await ensureSheetHeaders();
 
-      /* -----------------------------------------------------
-         SAVE TO SHEETS
+      /* =====================================================
+         FINAL GOOGLE SHEET ROW
 
+         A  = id
+         B  = customerId
+         C  = customerName
+         D  = fatherHusbandName
+         E  = fullAddress
+         F  = redemptionTime
+         G  = particulars
+         H  = annualIncome
+         I  = goldWeight
+         J  = loanTenure
+         K  = goldPrice
+         L  = interestRate
+         M  = principalAmount
+         N  = loanAmount
+         O  = monthlyInterest
+         P  = totalInterest
+         Q  = totalAmountToPay
+         R  = amountInWords
+         S  = totalAmountInWords
+         T  = ticketNumber
+         U  = ticketDate
+         V  = declarationAccepted
+         W  = paymentStatus
+         X  = paidAt
+         Y  = createdAt
+         Z  = savedAt
+         AA = personPhotoUrl
+         AB = jewelleryPhotoUrl
          AC = phoneNumber
          AD = blank
          AE = loanMonth
-      ----------------------------------------------------- */
+      ===================================================== */
+
+ const sheetRow = [
+  savedTicket.id,                       // A
+  savedTicket.customerId,               // B
+  savedTicket.customerName,             // C
+  savedTicket.fatherHusbandName,        // D
+  savedTicket.fullAddress,              // E
+  savedTicket.redemptionTime,           // F
+  savedTicket.particulars,              // G
+  savedTicket.annualIncome,             // H
+  savedTicket.goldWeight,               // I
+  savedTicket.loanTenure,               // J
+  savedTicket.goldPrice,                // K
+  savedTicket.interestRate,             // L
+  savedTicket.principalAmount,          // M
+  savedTicket.loanAmount,               // N
+  savedTicket.monthlyInterest,          // O
+  savedTicket.totalInterest,            // P
+  savedTicket.totalAmountToPay,         // Q
+  savedTicket.amountInWords,             // R
+  savedTicket.totalAmountInWords,        // S
+  savedTicket.ticketNumber,             // T
+  savedTicket.ticketDate,               // U
+  savedTicket.declarationAccepted,      // V
+  savedTicket.paymentStatus,            // W
+  savedTicket.paidAt || "",             // X
+  savedTicket.createdAt,                // Y
+  savedTicket.savedAt,                  // Z
+  savedTicket.personPhotoUrl,           // AA
+  savedTicket.jewelleryPhotoUrl,        // AB
+  String(savedTicket.phoneNumber || ""),// AC
+  "",                                   // AD
+  String(savedTicket.loanMonth || ""),  // AE
+];
+
+      console.log(
+        "===================================="
+      );
+
+      console.log(
+        "SHEET ROW LENGTH:",
+        sheetRow.length
+      );
+
+      console.log(
+        "A ID:",
+        sheetRow[0]
+      );
+
+      console.log(
+        "B AADHAR:",
+        sheetRow[1]
+      );
+
+      console.log(
+        "C CUSTOMER NAME:",
+        sheetRow[2]
+      );
+
+      console.log(
+        "D FATHER/HUSBAND:",
+        sheetRow[3]
+      );
+
+      console.log(
+        "R AMOUNT IN WORDS:",
+        sheetRow[17]
+      );
+
+      console.log(
+        "S TOTAL AMOUNT IN WORDS:",
+        sheetRow[18]
+      );
+
+      console.log(
+        "T TICKET NUMBER:",
+        sheetRow[19]
+      );
+
+      console.log(
+        "U TICKET DATE:",
+        sheetRow[20]
+      );
+
+      console.log(
+        "V DECLARATION:",
+        sheetRow[21]
+      );
+
+      console.log(
+        "W PAYMENT STATUS:",
+        sheetRow[22]
+      );
+
+      console.log(
+        "AC PHONE:",
+        sheetRow[28]
+      );
+
+      console.log(
+        "AE LOAN MONTH:",
+        sheetRow[30]
+      );
+
+      console.log(
+        "===================================="
+      );
+
+      /* =====================================================
+         SAVE TO GOOGLE SHEETS
+      ===================================================== */
 
       await sheets.spreadsheets.values.append({
         spreadsheetId:
           GOOGLE_SHEET_ID,
 
         range:
-          SHEET_RANGE,
+          `${GOOGLE_SHEET_NAME}!A:AC`,
 
         valueInputOption:
           "RAW",
@@ -1144,67 +1418,13 @@ app.post(
 
         requestBody: {
           values: [
-            [
-              savedTicket.id,
-              savedTicket.customerId,
-              savedTicket.customerName,
-              savedTicket.FatherHusbandName,
-              savedTicket.fullAddress,
-              savedTicket.redemptionTime,
-              savedTicket.particulars,
-              savedTicket.annualIncome,
-              savedTicket.goldWeight,
-              savedTicket.loanTenure,
-              savedTicket.goldPrice,
-              savedTicket.interestRate,
-              savedTicket.principalAmount,
-              savedTicket.loanAmount,
-              savedTicket.monthlyInterest,
-              savedTicket.totalInterest,
-              savedTicket.totalAmountToPay,
-              savedTicket.amountInWords,
-              // savedTicket.totalAmountInWords,
-              savedTicket.ticketNumber,
-              savedTicket.ticketDate,
-              savedTicket.declarationAccepted,
-              savedTicket.paymentStatus,
-              "",
-              savedTicket.createdAt,
-              savedTicket.savedAt,
-              savedTicket.personPhotoUrl,
-              savedTicket.jewelleryPhotoUrl,
-
-              /* AC - PHONE NUMBER */
-              String(
-                savedTicket.phoneNumber || ""
-              ),
-
-              /* AD - KEEP EXISTING COLUMN UNTOUCHED */
-              "",
-
-              /* AE - LOAN MONTH */
-              String(
-                savedTicket.loanMonth || ""
-              ),
-            ],
+            sheetRow,
           ],
         },
       });
 
       console.log(
         `PAWN TICKET SAVED: ${id}`
-      );
-
-      console.log(
-        `PHONE NUMBER SAVED TO AC: ${String(
-          savedTicket.phoneNumber || ""
-        )}`
-      );
-
-      console.log(
-        `LOAN MONTH SAVED TO AE: ${String(
-          savedTicket.loanMonth || ""
-        )}`
       );
 
       return res.status(201).json({
@@ -1230,9 +1450,11 @@ app.post(
         );
 
       if (
-        message.toLowerCase().includes(
-          "storage quota"
-        )
+        message
+          .toLowerCase()
+          .includes(
+            "storage quota"
+          )
       ) {
         return res.status(500).json({
           success: false,
@@ -1406,10 +1628,6 @@ app.patch(
 
 /* =========================================================
    CUSTOMER HISTORY
-   SEARCH BY:
-   1. AADHAR CARD NUMBER
-   2. MOBILE NUMBER
-   3. CUSTOMER NAME
 ========================================================= */
 
 app.get(
@@ -1448,7 +1666,10 @@ app.get(
           .trim();
 
       const normalizedDigits =
-        searchValue.replace(/\D/g, "");
+        searchValue.replace(
+          /\D/g,
+          ""
+        );
 
       const customerTickets =
         rows
@@ -1466,24 +1687,35 @@ app.get(
                 row[2] || ""
               )
                 .toLowerCase()
-                .replace(/\s+/g, " ")
+                .replace(
+                  /\s+/g,
+                  " "
+                )
                 .trim();
 
             const phoneNumber =
               String(
                 row[28] || ""
-              ).replace(/\D/g, "");
+              ).replace(
+                /\D/g,
+                ""
+              );
 
             const normalizedAadhar =
-              aadhar.replace(/\D/g, "");
+              aadhar.replace(
+                /\D/g,
+                ""
+              );
 
             const aadharMatch =
-              normalizedDigits.length > 0 &&
+              normalizedDigits.length >
+                0 &&
               normalizedAadhar ===
                 normalizedDigits;
 
             const phoneMatch =
-              normalizedDigits.length > 0 &&
+              normalizedDigits.length >
+                0 &&
               phoneNumber ===
                 normalizedDigits;
 
@@ -1500,7 +1732,8 @@ app.get(
           .map(rowToTicket);
 
       if (
-        customerTickets.length === 0
+        customerTickets.length ===
+        0
       ) {
         return res.status(200).json({
           success: true,
@@ -1698,7 +1931,9 @@ app.get(
         drive !== null,
 
       sheetIdConfigured:
-        Boolean(GOOGLE_SHEET_ID),
+        Boolean(
+          GOOGLE_SHEET_ID
+        ),
 
       driveFolderConfigured:
         Boolean(
@@ -1772,12 +2007,15 @@ if (!process.env.VERCEL) {
       console.log(
         "===================================="
       );
+
       console.log(
         "Mahaveer Gold backend is running"
       );
+
       console.log(
         `http://localhost:${PORT}`
       );
+
       console.log(
         "===================================="
       );

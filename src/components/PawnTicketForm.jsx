@@ -922,10 +922,14 @@ function PawnTicketForm({ loanData = {} }) {
   /* =======================================================
    PRINT PAWN TICKET
 ======================================================= */
+/* =======================================================
+   PRINT PAWN TICKET
+======================================================= */
 
 const handlePrint = () => {
   setMessage("");
 
+  // 1. Check declaration
   if (!ticket.declarationAccepted) {
     setMessage(
       "Please accept the declaration before printing the pawn ticket."
@@ -933,6 +937,7 @@ const handlePrint = () => {
     return;
   }
 
+  // 2. Find pawn ticket
   const ticketElement = document.getElementById("pawn-ticket");
 
   if (!ticketElement) {
@@ -940,134 +945,49 @@ const handlePrint = () => {
     return;
   }
 
-  // Remove any old print style first
-  const oldPrintStyle = document.getElementById(
-    "pawn-ticket-print-style"
-  );
+  try {
+    // 3. Add print mode
+    document.body.classList.add("printing-pawn-ticket");
+    ticketElement.classList.add("print-this-ticket");
 
-  if (oldPrintStyle) {
-    oldPrintStyle.remove();
-  }
+    // 4. Function to restore normal page
+    const cleanupPrint = () => {
+      document.body.classList.remove("printing-pawn-ticket");
+      ticketElement.classList.remove("print-this-ticket");
 
-  // Create print-only CSS
-  const printStyle = document.createElement("style");
+      window.removeEventListener(
+        "afterprint",
+        cleanupPrint
+      );
+    };
 
-  printStyle.id = "pawn-ticket-print-style";
-
-  printStyle.innerHTML = `
-    @media print {
-
-      @page {
-        size: A4;
-        margin: 10mm;
-      }
-
-      html,
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        background: #ffffff !important;
-      }
-
-      /* Hide everything on the page */
-      body * {
-        visibility: hidden !important;
-      }
-
-      /* Show only the pawn ticket */
-      #pawn-ticket,
-      #pawn-ticket * {
-        visibility: visible !important;
-      }
-
-      #pawn-ticket {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
-      }
-
-      .pawn-ticket-container {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 10px !important;
-        background: #ffffff !important;
-      }
-
-      /* Hide buttons and history from print */
-      .ticket-actions,
-      .save-message,
-      .customer-loan-history,
-      button {
-        display: none !important;
-      }
-
-      input,
-      textarea,
-      select {
-        color: #000000 !important;
-        background: transparent !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      textarea {
-        resize: none !important;
-      }
-
-      img {
-        max-width: 100% !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .pawn-ticket-heading,
-      .ticket-top-grid,
-      .ticket-fields,
-      .ticket-bottom-grid,
-      .ticket-delivery-note,
-      .ticket-declaration,
-      .signature-grid {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(printStyle);
-
-  // Open Chrome's normal print preview
-  setTimeout(() => {
-    window.print();
-  }, 100);
-
-  // Restore the page after print preview is closed
-  const cleanupPrintStyle = () => {
-    const style = document.getElementById(
-      "pawn-ticket-print-style"
-    );
-
-    if (style) {
-      style.remove();
-    }
-
-    window.removeEventListener(
+    // 5. Restore page after Chrome print dialog closes
+    window.addEventListener(
       "afterprint",
-      cleanupPrintStyle
+      cleanupPrint
     );
-  };
 
-  window.addEventListener(
-    "afterprint",
-    cleanupPrintStyle
-  );
-};
+    // 6. Open Chrome's normal print dialog
+    setTimeout(() => {
+      window.print();
+    }, 100);
+
+  } catch (error) {
+    console.error("PRINT ERROR:", error);
+
+    document.body.classList.remove(
+      "printing-pawn-ticket"
+    );
+
+    ticketElement.classList.remove(
+      "print-this-ticket"
+    );
+
+    setMessage(
+      "Unable to print the pawn ticket. Please try again."
+    );
+  }
+};  
 
   /* =======================================================
      FORMAT CURRENCY

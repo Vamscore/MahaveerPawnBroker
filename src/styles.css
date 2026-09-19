@@ -1090,7 +1090,360 @@ img:not([style*="display: none"])
 
   flex: 0 0 auto;
 }
+/* =======================================================
+   PAWN TICKET PRINT
+======================================================= */
 
+@media print {
+
+  /* ---------------------------------------------------
+     PAGE
+  --------------------------------------------------- */
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+
+  /* ---------------------------------------------------
+     HIDE EVERYTHING
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket * {
+    visibility: hidden !important;
+  }
+
+
+  /* ---------------------------------------------------
+     SHOW ONLY PAWN TICKET
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket #pawn-ticket,
+  body.printing-pawn-ticket #pawn-ticket * {
+    visibility: visible !important;
+  }
+
+
+  /* ---------------------------------------------------
+     PAWN TICKET CONTAINER
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket #pawn-ticket {
+    display: block !important;
+
+    position: absolute !important;
+
+    left: 0 !important;
+    top: 0 !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    min-width: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #ffffff !important;
+
+    color: #000000 !important;
+
+    overflow: visible !important;
+  }
+
+
+  /* ---------------------------------------------------
+     PAWN TICKET INNER CONTAINERS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .pawn-ticket-section,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .pawn-ticket-container {
+    display: block !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    background: #ffffff !important;
+
+    color: #000000 !important;
+
+    overflow: visible !important;
+  }
+
+
+  /* ---------------------------------------------------
+     REMOVE EXTRA PADDING
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .pawn-ticket-container {
+    padding: 0 !important;
+  }
+
+
+  /* ---------------------------------------------------
+     HIDE BUTTONS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  button,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-actions,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .save-message,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .customer-loan-history {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+
+  /* ---------------------------------------------------
+     FORM INPUTS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  textarea,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  select {
+    visibility: visible !important;
+
+    color: #000000 !important;
+
+    background: #ffffff !important;
+
+    opacity: 1 !important;
+
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+
+  /* ---------------------------------------------------
+     INPUT TEXT
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="text"],
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="number"],
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="tel"],
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="email"],
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="date"] {
+    color: #000000 !important;
+
+    -webkit-text-fill-color: #000000 !important;
+
+    background: #ffffff !important;
+  }
+
+
+  /* ---------------------------------------------------
+     CHECKBOX
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  input[type="checkbox"] {
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    display: inline-block !important;
+  }
+
+
+  /* ---------------------------------------------------
+     TEXTAREA
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  textarea {
+    resize: none !important;
+
+    overflow: visible !important;
+
+    color: #000000 !important;
+
+    background: #ffffff !important;
+  }
+
+
+  /* ---------------------------------------------------
+     IMAGES
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  img {
+    visibility: visible !important;
+
+    display: block !important;
+
+    max-width: 100% !important;
+
+    height: auto !important;
+
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+
+  /* ---------------------------------------------------
+     TABLES
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  table {
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    border-collapse: collapse !important;
+
+    page-break-inside: avoid !important;
+
+    break-inside: avoid !important;
+  }
+
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  tr {
+    page-break-inside: avoid !important;
+
+    break-inside: avoid !important;
+  }
+
+
+  /* ---------------------------------------------------
+     IMPORTANT SECTIONS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .pawn-ticket-heading,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-top-grid,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-fields,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-bottom-grid,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-delivery-note,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .ticket-declaration,
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  .signature-grid {
+    break-inside: avoid !important;
+
+    page-break-inside: avoid !important;
+  }
+
+
+  /* ---------------------------------------------------
+     COLORS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  * {
+    -webkit-print-color-adjust: exact !important;
+
+    print-color-adjust: exact !important;
+  }
+
+
+  /* ---------------------------------------------------
+     LINKS
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  #pawn-ticket
+  a {
+    color: #000000 !important;
+
+    text-decoration: none !important;
+  }
+
+
+  /* ---------------------------------------------------
+     FOOTER / HEADER / EXTRA WEBSITE CONTENT
+  --------------------------------------------------- */
+
+  body.printing-pawn-ticket
+  header,
+
+  body.printing-pawn-ticket
+  footer,
+
+  body.printing-pawn-ticket
+  nav {
+    display: none !important;
+
+    visibility: hidden !important;
+  }
+}
 /* =========================================================
    PAWN TICKET
 ========================================================= */
