@@ -920,460 +920,154 @@ function PawnTicketForm({ loanData = {} }) {
   };
 
   /* =======================================================
-     PRINT PAWN TICKET
-  ======================================================= */
+   PRINT PAWN TICKET
+======================================================= */
 
-  const handlePrint = () => {
-    setMessage("");
+const handlePrint = () => {
+  setMessage("");
 
-    if (
-      !ticket.declarationAccepted
-    ) {
-      setMessage(
-        "Please accept the declaration before printing the pawn ticket."
-      );
+  if (!ticket.declarationAccepted) {
+    setMessage(
+      "Please accept the declaration before printing the pawn ticket."
+    );
+    return;
+  }
 
-      return;
+  const ticketElement = document.getElementById("pawn-ticket");
+
+  if (!ticketElement) {
+    setMessage("Pawn ticket section not found.");
+    return;
+  }
+
+  // Remove any old print style first
+  const oldPrintStyle = document.getElementById(
+    "pawn-ticket-print-style"
+  );
+
+  if (oldPrintStyle) {
+    oldPrintStyle.remove();
+  }
+
+  // Create print-only CSS
+  const printStyle = document.createElement("style");
+
+  printStyle.id = "pawn-ticket-print-style";
+
+  printStyle.innerHTML = `
+    @media print {
+
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        background: #ffffff !important;
+      }
+
+      /* Hide everything on the page */
+      body * {
+        visibility: hidden !important;
+      }
+
+      /* Show only the pawn ticket */
+      #pawn-ticket,
+      #pawn-ticket * {
+        visibility: visible !important;
+      }
+
+      #pawn-ticket {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      .pawn-ticket-container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        background: #ffffff !important;
+      }
+
+      /* Hide buttons and history from print */
+      .ticket-actions,
+      .save-message,
+      .customer-loan-history,
+      button {
+        display: none !important;
+      }
+
+      input,
+      textarea,
+      select {
+        color: #000000 !important;
+        background: transparent !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      textarea {
+        resize: none !important;
+      }
+
+      img {
+        max-width: 100% !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .pawn-ticket-heading,
+      .ticket-top-grid,
+      .ticket-fields,
+      .ticket-bottom-grid,
+      .ticket-delivery-note,
+      .ticket-declaration,
+      .signature-grid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(printStyle);
+
+  // Open Chrome's normal print preview
+  setTimeout(() => {
+    window.print();
+  }, 100);
+
+  // Restore the page after print preview is closed
+  const cleanupPrintStyle = () => {
+    const style = document.getElementById(
+      "pawn-ticket-print-style"
+    );
+
+    if (style) {
+      style.remove();
     }
 
-    try {
-      const ticketElement =
-        document.getElementById(
-          "pawn-ticket"
-        );
-
-      if (!ticketElement) {
-        setMessage(
-          "Pawn ticket section not found."
-        );
-
-        return;
-      }
-
-      const printWindow =
-        window.open(
-          "",
-          "_blank",
-          "width=1000,height=900,left=50,top=50"
-        );
-
-      if (!printWindow) {
-        setMessage(
-          "Print window was blocked by your browser. Please allow pop-ups for this website and try again."
-        );
-
-        return;
-      }
-
-      const styles =
-        Array.from(
-          document.querySelectorAll(
-            'link[rel="stylesheet"], style'
-          )
-        )
-          .map(
-            (style) =>
-              style.outerHTML
-          )
-          .join("\n");
-
-      const ticketClone =
-        ticketElement.cloneNode(
-          true
-        );
-
-      const originalInputs =
-        ticketElement.querySelectorAll(
-          "input, textarea, select"
-        );
-
-      const clonedInputs =
-        ticketClone.querySelectorAll(
-          "input, textarea, select"
-        );
-
-      originalInputs.forEach(
-        (original, index) => {
-          const clone =
-            clonedInputs[index];
-
-          if (!clone) {
-            return;
-          }
-
-          if (
-            original.tagName ===
-            "INPUT"
-          ) {
-            const type =
-              original.type;
-
-            if (
-              type ===
-              "checkbox"
-            ) {
-              clone.checked =
-                original.checked;
-
-              if (
-                original.checked
-              ) {
-                clone.setAttribute(
-                  "checked",
-                  "checked"
-                );
-              } else {
-                clone.removeAttribute(
-                  "checked"
-                );
-              }
-            } else {
-              clone.value =
-                original.value;
-
-              clone.setAttribute(
-                "value",
-                original.value
-              );
-            }
-          }
-
-          if (
-            original.tagName ===
-            "TEXTAREA"
-          ) {
-            clone.value =
-              original.value;
-
-            clone.textContent =
-              original.value;
-          }
-
-          if (
-            original.tagName ===
-            "SELECT"
-          ) {
-            clone.value =
-              original.value;
-
-            Array.from(
-              clone.options
-            ).forEach(
-              (option) => {
-                option.removeAttribute(
-                  "selected"
-                );
-
-                if (
-                  option.value ===
-                  original.value
-                ) {
-                  option.setAttribute(
-                    "selected",
-                    "selected"
-                  );
-                }
-              }
-            );
-          }
-        }
-      );
-
-      ticketClone
-        .querySelectorAll(
-          ".ticket-actions"
-        )
-        .forEach(
-          (element) => {
-            element.remove();
-          }
-        );
-
-      ticketClone
-        .querySelectorAll(
-          ".save-message"
-        )
-        .forEach(
-          (element) => {
-            element.remove();
-          }
-        );
-
-      ticketClone
-        .querySelectorAll(
-          ".customer-loan-history"
-        )
-        .forEach(
-          (element) => {
-            element.remove();
-          }
-        );
-
-      ticketClone
-        .querySelectorAll(
-          "button"
-        )
-        .forEach(
-          (element) => {
-            element.remove();
-          }
-        );
-
-      printWindow.document.open();
-
-      printWindow.document.write(`
-        <!DOCTYPE html>
-
-        <html>
-
-          <head>
-
-            <meta charset="UTF-8" />
-
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1.0"
-            />
-
-            <title>
-              Pawn Ticket - ${
-                ticket.ticketNumber ||
-                savedTicketId ||
-                "Mahaveer"
-              }
-            </title>
-
-            ${styles}
-
-            <style>
-
-              * {
-                box-sizing: border-box;
-              }
-
-              html,
-              body {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-                width: 100%;
-              }
-
-              body {
-                font-family: Arial, sans-serif;
-                color: #000;
-              }
-
-              #pawn-ticket {
-                display: block !important;
-                visibility: visible !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-              }
-
-              .pawn-ticket-section {
-                display: block !important;
-                visibility: visible !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #ffffff !important;
-              }
-
-              .pawn-ticket-container {
-                display: block !important;
-                visibility: visible !important;
-                width: 100% !important;
-                max-width: none !important;
-                margin: 0 auto !important;
-                padding: 10px !important;
-                background: #ffffff !important;
-              }
-
-              .ticket-actions,
-              .save-message,
-              .customer-loan-history,
-              button {
-                display: none !important;
-              }
-
-              input,
-              textarea,
-              select {
-                color: #000 !important;
-                background: transparent !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-
-              textarea {
-                resize: none !important;
-              }
-
-              img {
-                max-width: 100%;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-
-              .pawn-ticket-heading,
-              .ticket-top-grid,
-              .ticket-fields,
-              .ticket-bottom-grid,
-              .ticket-delivery-note,
-              .ticket-declaration,
-              .signature-grid {
-                break-inside: avoid;
-                page-break-inside: avoid;
-              }
-
-              @page {
-                size: A4;
-                margin: 10mm;
-              }
-
-              @media print {
-
-                html,
-                body {
-                  width: 100% !important;
-                  margin: 0 !important;
-                  padding: 0 !important;
-                  background: #fff !important;
-                }
-
-                #pawn-ticket,
-                .pawn-ticket-section,
-                .pawn-ticket-container {
-                  width: 100% !important;
-                  margin: 0 !important;
-                }
-
-                .ticket-actions,
-                .save-message,
-                .customer-loan-history,
-                button {
-                  display: none !important;
-                }
-
-              }
-
-            </style>
-
-          </head>
-
-          <body>
-
-            ${ticketClone.outerHTML}
-
-          </body>
-
-        </html>
-      `);
-
-      printWindow.document.close();
-
-      const startPrinting = () => {
-        try {
-          printWindow.focus();
-
-          setTimeout(() => {
-            printWindow.focus();
-
-            printWindow.print();
-
-            setTimeout(() => {
-              try {
-                printWindow.close();
-              } catch (
-                closeError
-              ) {
-                console.warn(
-                  "Print window could not be closed:",
-                  closeError
-                );
-              }
-            }, 3000);
-          }, 700);
-        } catch (
-          printError
-        ) {
-          console.error(
-            "PRINT WINDOW ERROR:",
-            printError
-          );
-
-          setMessage(
-            "Unable to open print preview. Please try again."
-          );
-        }
-      };
-
-      const images =
-        printWindow.document.images;
-
-      if (
-        images.length === 0
-      ) {
-        startPrinting();
-
-        return;
-      }
-
-      let remainingImages =
-        images.length;
-
-      let started = false;
-
-      const finishImageLoading =
-        () => {
-          remainingImages--;
-
-          if (
-            remainingImages <=
-              0 &&
-            !started
-          ) {
-            started = true;
-
-            startPrinting();
-          }
-        };
-
-      Array.from(images).forEach(
-        (image) => {
-          if (image.complete) {
-            finishImageLoading();
-          } else {
-            image.onload =
-              finishImageLoading;
-
-            image.onerror =
-              finishImageLoading;
-          }
-        }
-      );
-
-      setTimeout(() => {
-        if (!started) {
-          started = true;
-
-          startPrinting();
-        }
-      }, 3000);
-    } catch (error) {
-      console.error(
-        "PRINT ERROR:",
-        error
-      );
-
-      setMessage(
-        "Unable to print the pawn ticket. Please try again."
-      );
-    }
+    window.removeEventListener(
+      "afterprint",
+      cleanupPrintStyle
+    );
   };
+
+  window.addEventListener(
+    "afterprint",
+    cleanupPrintStyle
+  );
+};
 
   /* =======================================================
      FORMAT CURRENCY
@@ -1665,6 +1359,30 @@ function PawnTicketForm({ loanData = {} }) {
               onChange={(event) =>
                 updateTicket(
                   "phoneNumber",
+                  event.target.value
+                )
+              }
+            />
+
+          </div>
+
+          <div className="ticket-field">
+
+            <label htmlFor="aadharCardNumberInput">
+              Aadhar Card Number
+            </label>
+
+            <input
+              id="aadharCardNumberInput"
+              type="text"
+              inputMode="numeric"
+              placeholder="Enter Aadhar Card Number"
+              value={
+                ticket.aadharCardNumber
+              }
+              onChange={(event) =>
+                updateTicket(
+                  "aadharCardNumber",
                   event.target.value
                 )
               }

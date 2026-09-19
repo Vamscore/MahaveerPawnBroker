@@ -208,11 +208,11 @@ const SHEET_RANGE =
 ========================================================= */
 
 const SHEET_HEADERS = [
-  "id",
-  "customerId",
+  "Ticket Number",
+  "Aadhar Card Number",
   "customerName",
-  "fatherHusbandName",
-  "fullAddress",
+  "Father/HusbandName",
+  "Address",
   "redemptionTime",
   "particulars",
   "annualIncome",
@@ -226,7 +226,7 @@ const SHEET_HEADERS = [
   "totalInterest",
   "totalAmountToPay",
   "amountInWords",
-  "totalAmountInWords",
+  "",
   "ticketNumber",
   "ticketDate",
   "declarationAccepted",
@@ -452,8 +452,8 @@ function rowToTicket(row) {
     amountInWords:
       row[17] || "",
 
-    totalAmountInWords:
-      row[18] || "",
+    // totalAmountInWords:
+    //   row[18] || "",
 
     ticketNumber:
       row[19] || "",
@@ -794,7 +794,7 @@ app.post(
         return res.status(400).json({
           success: false,
           message:
-            "Customer ID is required.",
+            "Aadhar Card Number is required.",
         });
       }
 
@@ -1081,9 +1081,9 @@ app.post(
           ticket.amountInWords ||
           "",
 
-        totalAmountInWords:
-          ticket.totalAmountInWords ||
-          "",
+        // totalAmountInWords:
+        //   ticket.totalAmountInWords ||
+        //   "",
 
         ticketNumber:
           ticket.ticketNumber ||
@@ -1148,7 +1148,7 @@ app.post(
               savedTicket.id,
               savedTicket.customerId,
               savedTicket.customerName,
-              savedTicket.fatherHusbandName,
+              savedTicket.FatherHusbandName,
               savedTicket.fullAddress,
               savedTicket.redemptionTime,
               savedTicket.particulars,
@@ -1163,7 +1163,7 @@ app.post(
               savedTicket.totalInterest,
               savedTicket.totalAmountToPay,
               savedTicket.amountInWords,
-              savedTicket.totalAmountInWords,
+              // savedTicket.totalAmountInWords,
               savedTicket.ticketNumber,
               savedTicket.ticketDate,
               savedTicket.declarationAccepted,
