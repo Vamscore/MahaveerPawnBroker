@@ -72,3 +72,5 @@ oauth-client.json
 server-old/
 # Local backend backup
 backend/server-backup.js
+.vercel
+.env*
