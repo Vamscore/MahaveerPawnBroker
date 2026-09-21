@@ -187,7 +187,7 @@ if (
 ========================================================= */
 
 const SHEET_RANGE =
-  `${GOOGLE_SHEET_NAME}!A:AC`;
+  `${GOOGLE_SHEET_NAME}!A:AE`;
 
 /* =========================================================
    CORRECT SHEET HEADERS

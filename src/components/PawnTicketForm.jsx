@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import { API_URL as API_BASE } from "../config";
 
-const API_URL =
-  "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
-      // "http://localhost:5000/api/pawn-tickets";
+const API_URL = `${API_BASE}/api/pawn-tickets`;
 
 /* =========================================================
    TODAY'S DATE
@@ -1023,7 +1022,7 @@ function PawnTicketForm({ loanData = {} }) {
           "Failed to fetch"
       ) {
         setMessage(
-          "Unable to connect to backend. Please make sure server.js is running on port 5000."
+          "Unable to connect to backend. Please try again."
         );
       } else {
         setMessage(

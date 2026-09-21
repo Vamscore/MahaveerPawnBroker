@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function OwnerLogin() {
   const navigate = useNavigate();
@@ -64,8 +65,7 @@ function OwnerLogin() {
 
     try {
   const response = await fetch(
-    "https://mahaveer-pawn-broker-c32n.vercel.app/api/auth/login",
-      // `${API_URL}/api/auth/login`,
+    `${API_URL}/api/auth/login`,
     {
       method: "POST",
 
@@ -115,7 +115,7 @@ function OwnerLogin() {
       );
 
       setError(
-        "Unable to connect to backend. Make sure the backend is running on port 5000."
+        "Unable to connect to backend. Please try again."
       );
     } finally {
       setLoading(false);
