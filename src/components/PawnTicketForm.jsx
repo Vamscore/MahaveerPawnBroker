@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 const API_URL =
-  "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
-      // "http://localhost:5000/api/pawn-tickets";
+  // "https://mahaveer-pawn-broker-c32n.vercel.app/api/pawn-tickets";
+      "http://localhost:5000/api/pawn-tickets";
 
 /* =========================================================
    TODAY'S DATE
@@ -370,6 +370,11 @@ function PawnTicketForm({ loanData = {} }) {
 
   /* =======================================================
      SEARCH CUSTOMER HISTORY
+     Search by:
+     1. Aadhar Card Number
+     2. Phone Number
+     3. Customer Name
+     4. Ticket Number (example: C1001)
   ======================================================= */
 
   const searchCustomerHistory = async () => {
@@ -377,7 +382,7 @@ function PawnTicketForm({ loanData = {} }) {
 
     if (!searchValue) {
       setHistoryMessage(
-        "Please enter Aadhar Card Number, Phone Number, or Customer Name first."
+        "Please enter Aadhar Card Number, Phone Number, Customer Name, or Ticket Number first."
       );
 
       setCustomerHistory([]);
@@ -396,24 +401,100 @@ function PawnTicketForm({ loanData = {} }) {
     setIsNewCustomer(false);
 
     try {
-      const response = await fetch(
-        `${API_URL}/customer/${encodeURIComponent(
-          searchValue
-        )}`
-      );
+      const normalizedSearchValue = searchValue.toLowerCase();
 
-      const result = await response.json();
+      /*
+       * Ticket numbers are normally entered in the form C1001.
+       * Search the main pawn-ticket collection and match either
+       * ticketNumber or id. This keeps ticket-number searching
+       * inside this form without changing the existing customer
+       * search behaviour.
+       */
+      const looksLikeTicketNumber =
+        /^c\d+$/i.test(searchValue);
 
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-            "Unable to find customer history."
+      let result = {};
+      let loans = [];
+
+      if (looksLikeTicketNumber) {
+        const ticketResponse = await fetch(API_URL);
+
+        let ticketResult = {};
+
+        try {
+          ticketResult = await ticketResponse.json();
+        } catch (jsonError) {
+          console.warn(
+            "Ticket search response was not JSON:",
+            jsonError
+          );
+        }
+
+        if (!ticketResponse.ok) {
+          throw new Error(
+            ticketResult.message ||
+              "Unable to search ticket number."
+          );
+        }
+
+        const allTickets = Array.isArray(ticketResult)
+          ? ticketResult
+          : Array.isArray(ticketResult.tickets)
+          ? ticketResult.tickets
+          : Array.isArray(ticketResult.data)
+          ? ticketResult.data
+          : ticketResult.ticket
+          ? [ticketResult.ticket]
+          : [];
+
+        loans = allTickets.filter((loan) => {
+          const ticketNumber = String(
+            loan?.ticketNumber || ""
+          ).trim().toLowerCase();
+
+          const ticketId = String(
+            loan?.id || ""
+          ).trim().toLowerCase();
+
+          return (
+            ticketNumber === normalizedSearchValue ||
+            ticketId === normalizedSearchValue
+          );
+        });
+
+        result = {
+          tickets: loans,
+          isNewCustomer: loans.length === 0,
+        };
+
+        setCustomerSearchType("Ticket Number");
+      } else {
+        const response = await fetch(
+          `${API_URL}/customer/${encodeURIComponent(
+            searchValue
+          )}`
         );
-      }
 
-      const loans = Array.isArray(result.tickets)
-        ? result.tickets
-        : [];
+        try {
+          result = await response.json();
+        } catch (jsonError) {
+          console.warn(
+            "Customer search response was not JSON:",
+            jsonError
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              "Unable to find customer history."
+          );
+        }
+
+        loans = Array.isArray(result.tickets)
+          ? result.tickets
+          : [];
+      }
 
       setCustomerHistory(loans);
       setShowHistory(true);
@@ -422,40 +503,58 @@ function PawnTicketForm({ loanData = {} }) {
          DETECT WHAT THE USER SEARCHED FOR
       --------------------------------------------------- */
 
-      const digitsOnly = searchValue.replace(/\D/g, "");
+      if (!looksLikeTicketNumber) {
+        const digitsOnly = searchValue.replace(/\D/g, "");
 
-      let detectedType = "Customer Name";
+        let detectedType = "Customer Name";
 
-      if (digitsOnly.length === 12 && digitsOnly === searchValue.replace(/\D/g, "")) {
-        detectedType = "Aadhar Card Number";
-      } else if (digitsOnly.length === 10) {
-        detectedType = "Phone Number";
+        if (
+          digitsOnly.length === 12 &&
+          digitsOnly === searchValue.replace(/\D/g, "")
+        ) {
+          detectedType = "Aadhar Card Number";
+        } else if (digitsOnly.length === 10) {
+          detectedType = "Phone Number";
+        }
+
+        setCustomerSearchType(detectedType);
       }
 
-      setCustomerSearchType(detectedType);
+      const detectedType = looksLikeTicketNumber
+        ? "Ticket Number"
+        : customerSearchType ||
+          (() => {
+            const digitsOnly = searchValue.replace(/\D/g, "");
+
+            if (
+              digitsOnly.length === 12 &&
+              digitsOnly === searchValue.replace(/\D/g, "")
+            ) {
+              return "Aadhar Card Number";
+            }
+
+            if (digitsOnly.length === 10) {
+              return "Phone Number";
+            }
+
+            return "Customer Name";
+          })();
 
       if (result.isNewCustomer || loans.length === 0) {
         setIsNewCustomer(true);
 
         setHistoryMessage(
-          `No previous loans found for this ${detectedType.toLowerCase()}.`
+          `No previous loan found for this ${detectedType.toLowerCase()}.`
         );
       } else {
         setIsNewCustomer(false);
 
         /* -------------------------------------------------
-           EXISTING CUSTOMER DETAILS
+           EXISTING CUSTOMER / TICKET DETAILS
 
-           When the user searches by Aadhar, phone number,
-           OR CUSTOMER NAME (for example: "Siri"), use the
-           first matching previous loan to fill the customer
+           For Aadhar, phone, customer name, OR ticket number,
+           use the first matching loan to fill the customer
            details in the current pawn ticket.
-
-           This means:
-           Search box -> Siri
-           -> previous Siri loans are displayed
-           -> Name / Father's-Husband's Name / Phone /
-              Address / Aadhar are filled from the old record.
         ------------------------------------------------- */
 
         const matchedLoan = loans[0] || {};
@@ -485,7 +584,9 @@ function PawnTicketForm({ loanData = {} }) {
             matchedLoan.mobile ||
             matchedLoan.phone ||
             ""
-        ).replace(/\D/g, "").trim();
+        )
+          .replace(/\D/g, "")
+          .trim();
 
         const matchedAddress = String(
           matchedLoan.fullAddress ||
@@ -493,37 +594,59 @@ function PawnTicketForm({ loanData = {} }) {
             ""
         ).trim();
 
+        const matchedAadhar = String(
+          matchedLoan.aadharCardNumber ||
+            matchedLoan.aadharNumber ||
+            matchedLoan.customerId ||
+            ""
+        ).trim();
+
+        const matchedTicketNumber = String(
+          matchedLoan.ticketNumber || ""
+        ).trim();
+
         setTicket((current) => ({
           ...current,
 
+          ticketNumber:
+            matchedTicketNumber ||
+            current.ticketNumber,
+
           customerName:
-            matchedCustomerName || current.customerName,
+            matchedCustomerName ||
+            current.customerName,
 
           fatherHusbandName:
             matchedFatherHusbandName ||
             current.fatherHusbandName,
 
           phoneNumber:
-            matchedPhoneNumber || current.phoneNumber,
+            matchedPhoneNumber ||
+            current.phoneNumber,
 
           fullAddress:
-            matchedAddress || current.fullAddress,
+            matchedAddress ||
+            current.fullAddress,
 
           aadharCardNumber:
-            matchedCustomerId || current.aadharCardNumber,
+            matchedAadhar ||
+            matchedCustomerId ||
+            current.aadharCardNumber,
         }));
 
         setHistoryMessage(
-          `Existing customer: ${
-            matchedCustomerName || searchValue
-          }. ${loans.length} previous loan${
-            loans.length === 1 ? "" : "s"
-          } found using ${detectedType}.`
+          looksLikeTicketNumber
+            ? `Ticket ${matchedTicketNumber || searchValue} found successfully.`
+            : `Existing customer: ${
+                matchedCustomerName || searchValue
+              }. ${loans.length} previous loan${
+                loans.length === 1 ? "" : "s"
+              } found using ${detectedType}.`
         );
       }
     } catch (error) {
       console.error(
-        "CUSTOMER HISTORY ERROR:",
+        "CUSTOMER/TICKET SEARCH ERROR:",
         error
       );
 
@@ -534,7 +657,7 @@ function PawnTicketForm({ loanData = {} }) {
 
       setHistoryMessage(
         error.message ||
-          "Customer history could not be loaded. Please try again."
+          "Search could not be completed. Please try again."
       );
     } finally {
       setHistoryLoading(false);
@@ -689,14 +812,6 @@ function PawnTicketForm({ loanData = {} }) {
       return;
     }
 
-    if (!ticket.aadharCardNumber.trim()) {
-      setMessage(
-        "Please enter Aadhar Card Number before saving. You can search the customer above using Aadhar, phone number, or name."
-      );
-
-      return;
-    }
-
     setSaving(true);
 
     /* =====================================================
@@ -718,7 +833,7 @@ function PawnTicketForm({ loanData = {} }) {
         ticket.aadharCardNumber.trim(),
 
       customerId:
-        ticket.aadharCardNumber.trim(),
+        ticket.aadharCardNumber.trim() || "",
 
       /* ===================================================
          PHONE NUMBER
@@ -845,53 +960,55 @@ function PawnTicketForm({ loanData = {} }) {
          REFRESH CUSTOMER HISTORY
       =================================================== */
 
-      try {
-        const aadharCardNumber =
-          ticket.aadharCardNumber.trim();
+      if (ticket.aadharCardNumber.trim()) {
+        try {
+          const aadharCardNumber =
+            ticket.aadharCardNumber.trim();
 
-        const historyResponse =
-          await fetch(
-            `${API_URL}/customer/${encodeURIComponent(
-              aadharCardNumber
-            )}`
-          );
+          const historyResponse =
+            await fetch(
+              `${API_URL}/customer/${encodeURIComponent(
+                aadharCardNumber
+              )}`
+            );
 
-        if (
-          historyResponse.ok
+          if (
+            historyResponse.ok
+          ) {
+            const historyResult =
+              await historyResponse.json();
+
+            const loans =
+              Array.isArray(
+                historyResult.tickets
+              )
+                ? historyResult.tickets
+                : [];
+
+            setCustomerHistory(
+              loans
+            );
+
+            setShowHistory(
+              true
+            );
+
+            setIsNewCustomer(
+              false
+            );
+
+            setHistoryMessage(
+              `Application saved. Total loans for this Aadhar Card Number: ${loans.length}`
+            );
+          }
+        } catch (
+          historyError
         ) {
-          const historyResult =
-            await historyResponse.json();
-
-          const loans =
-            Array.isArray(
-              historyResult.tickets
-            )
-              ? historyResult.tickets
-              : [];
-
-          setCustomerHistory(
-            loans
-          );
-
-          setShowHistory(
-            true
-          );
-
-          setIsNewCustomer(
-            false
-          );
-
-          setHistoryMessage(
-            `Application saved. Total loans for this Aadhar Card Number: ${loans.length}`
+          console.warn(
+            "History refresh failed after successful save:",
+            historyError
           );
         }
-      } catch (
-        historyError
-      ) {
-        console.warn(
-          "History refresh failed after successful save:",
-          historyError
-        );
       }
     } catch (error) {
       console.error(
@@ -1452,7 +1569,7 @@ const handlePrint = () => {
           <div className="ticket-field">
 
             <label htmlFor="aadharCardNumber">
-              Search Customer by Aadhar / Phone / Customer Name
+              Phone / Customer Name / P.B. No. / Aadhar
             </label>
 
             <div
@@ -1469,7 +1586,7 @@ const handlePrint = () => {
               <input
                 id="aadharCardNumber"
                 type="text"
-                placeholder="Enter Aadhar Number, Phone Number or Customer Name (e.g. Siri)"
+                placeholder="Enter Aadhar, Phone, Customer Name or Ticket No. (e.g. C1001)"
                 value={
                   customerSearchValue
                 }
@@ -1937,7 +2054,15 @@ const handlePrint = () => {
                           tableHeaderStyle
                         }
                       >
-                        Ticket ID
+                        Customer Name
+                      </th>
+
+                      <th
+                        style={
+                          tableHeaderStyle
+                        }
+                      >
+                        P.B. No. / Ticket No.
                       </th>
 
                       <th
@@ -2057,7 +2182,23 @@ const handlePrint = () => {
                               }}
                             >
                               {
-                                loan.id ||
+                                loan.customerName ||
+                                "-"
+                              }
+                            </td>
+
+                            <td
+                              style={{
+                                ...tableCellStyle,
+                                maxWidth:
+                                  "190px",
+                                wordBreak:
+                                  "break-word",
+                                fontWeight:
+                                  "600",
+                              }}
+                            >
+                              {
                                 loan.ticketNumber ||
                                 "-"
                               }
@@ -2263,7 +2404,7 @@ const handlePrint = () => {
           <div className="income-box">
 
             <h3>
-              My Annual Income
+              Annual Income
             </h3>
 
             <div className="ticket-input-prefix">

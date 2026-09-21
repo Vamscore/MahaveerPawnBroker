@@ -532,6 +532,10 @@ function rowToTicket(row) {
 
     customerId: row[1] || "",
 
+    // Keep an explicit Aadhar field for frontend search/display.
+    // It is optional, so this can safely be an empty string.
+    aadharCardNumber: row[1] || "",
+
     customerName: row[2] || "",
 
     fatherHusbandName: row[3] || "",
@@ -890,18 +894,14 @@ app.post(
          AADHAR
       ===================================================== */
 
+      // Aadhar Card Number is OPTIONAL.
+      // Keep compatibility with both frontend property names.
       const customerId =
         String(
-          ticket.customerId || ""
+          ticket.customerId ??
+            ticket.aadharCardNumber ??
+            ""
         ).trim();
-
-      if (!customerId) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Aadhar Card Number is required.",
-        });
-      }
 
       /* =====================================================
          CUSTOMER NAME
@@ -1650,7 +1650,7 @@ app.get(
         return res.status(400).json({
           success: false,
           message:
-            "Aadhar Card Number, mobile number, or customer name is required.",
+            "Aadhar Card Number, mobile number, customer name, or ticket number is required.",
         });
       }
 
@@ -1701,6 +1701,13 @@ app.get(
                 ""
               );
 
+            const ticketNumber =
+              String(
+                row[19] || ""
+              )
+                .toLowerCase()
+                .trim();
+
             const normalizedAadhar =
               aadhar.replace(
                 /\D/g,
@@ -1723,10 +1730,15 @@ app.get(
               customerName ===
               normalizedSearch;
 
+            const ticketNumberMatch =
+              ticketNumber ===
+              normalizedSearch;
+
             return (
               aadharMatch ||
               phoneMatch ||
-              nameMatch
+              nameMatch ||
+              ticketNumberMatch
             );
           })
           .map(rowToTicket);
