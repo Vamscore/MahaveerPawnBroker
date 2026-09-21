@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 function OwnerLogin() {
   const navigate = useNavigate();
@@ -64,7 +65,8 @@ function OwnerLogin() {
 
     try {
   const response = await fetch(
-    "https://mahaveer-pawn-broker-c32n.vercel.app/api/auth/login",
+    // "https://mahaveer-pawn-broker-c32n.vercel.app/api/auth/login",
+      `${API_URL}/api/auth/login`,
     {
       method: "POST",
 
